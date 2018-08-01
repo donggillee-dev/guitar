@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    android:id="@+id/homelayout">
+
+    <ImageButton
+        android:id="@+id/start"
+        android:layout_width="match_parent"
+        android:layout_height="267dp"
+        android:background="@mipmap/ic_launcher" />
+
+    <ListView
+        android:id="@+id/curSearch"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_below="@+id/start"
+        android:minHeight="50dp"></ListView>
+
+</RelativeLayout>
