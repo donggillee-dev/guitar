@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.ToggleButton;
 
 /**
  * Created by 성민우 on 2018-08-01.
@@ -15,10 +16,10 @@ public class RecordFragment extends Fragment {
     public static RecordFragment newInstance() {
         return new RecordFragment();
     }
-
+    ToggleButton listenBtn;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.record_fragment, container, false);
-
+        listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
         return view; // 여기서 UI를 생성해서 View를 return
     }
 }
