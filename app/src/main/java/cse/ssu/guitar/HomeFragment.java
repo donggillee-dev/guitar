@@ -20,9 +20,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 
 /**
  * Created by 성민우 on 2018-08-01.
@@ -71,6 +73,29 @@ public class HomeFragment extends Fragment {
         // 세 번째 아이템 추가.
         adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_notifications_black_24dp),
                 "Ind", "Assignment Ind Black 36dp");
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView name_view, artist_view;
+                String name, artist;
+                Fragment fragment = MusicFragment.newInstance();
+                Bundle bundle = new Bundle();
+
+                name_view = (TextView)view.findViewById(R.id.textView1);
+                artist_view = (TextView)view.findViewById(R.id.textView2);
+                name = name_view.getText().toString();
+                artist = artist_view.getText().toString();
+
+                Log.v("debug", "item selected > " + name + " : " + artist);
+
+                bundle.putString("name", name);
+                bundle.putString("artist", artist);
+                fragment.setArguments(bundle);
+                replaceFragment(fragment);
+            }
+        });
+
 
         //더보기 버튼 지정
         Button button = (Button)view.findViewById(R.id.more);

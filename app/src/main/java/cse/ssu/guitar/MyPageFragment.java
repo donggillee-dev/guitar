@@ -54,6 +54,14 @@ public class MyPageFragment extends Fragment {
             }
         });
 
+        sheet_more.setOnClickListener(new Button.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                replaceFragment(SheetListFragment.newInstance());
+            }
+        });
+
         return view; // 여기서 UI를 생성해서 View를 return
     }
 

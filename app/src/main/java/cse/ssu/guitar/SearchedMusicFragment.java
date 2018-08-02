@@ -33,11 +33,8 @@ public class SearchedMusicFragment extends Fragment {
         //디비에서 데이터 가져와서 화면에 뿌려줘야함
         for(int i = 0; i < 15; i++) {
             adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_dashboard_black_24dp),
-                    "Box", "Account Box Black 36dp");
+                    "Music Test " + i, "Account Box Black 36dp");
         }
-
-
-
 
 
         return view;
