@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
@@ -41,8 +42,7 @@ public class HomeFragment extends Fragment {
         Activity activity = (MainActivity)getActivity();
         final BottomNavigationView menu = (BottomNavigationView)activity.findViewById(R.id.navigation);
 
-        // Adapter 생성
-        adapter = new ListViewAdapter();
+
         ImageButton start = (ImageButton) view.findViewById(R.id.start);
         start.setOnClickListener(new ImageButton.OnClickListener() {
 
@@ -57,7 +57,8 @@ public class HomeFragment extends Fragment {
         });
         // 리스트뷰 참조 및 Adapter달기
 
-
+        // Adapter 생성
+        adapter = new ListViewAdapter();
         listview = (ListView) view.findViewById(R.id.curSearch);
         listview.setAdapter(adapter);
 
@@ -70,6 +71,17 @@ public class HomeFragment extends Fragment {
         // 세 번째 아이템 추가.
         adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_notifications_black_24dp),
                 "Ind", "Assignment Ind Black 36dp");
+
+        //더보기 버튼 지정
+        Button button = (Button)view.findViewById(R.id.more);
+        button.setOnClickListener(new Button.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Log.v("debug", "more");
+                replaceFragment(SearchedMusicFragment.newInstance());
+            }
+        });
 
 
         return view; // 여기서 UI를 생성해서 View를 return

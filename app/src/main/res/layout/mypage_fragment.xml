@@ -1,22 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mypage_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_weight="1">
+    android:orientation="vertical"
+    android:weightSum="100">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Recent Searched Music"
+        android:textSize="60px"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="0dp"
+        android:textColor="#000000"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#000000"
+        android:layout_margin="5dp"
+        android:layout_marginTop="0dp"/>
 
     <ListView
         android:id="@+id/curSearch"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="0dp"
         android:layout_below="@+id/start"
-        android:minHeight="50dp"></ListView>
+        android:minHeight="50dp"
+        android:layout_weight="42">
+
+    </ListView>
+    <Button
+        android:id="@+id/more_music"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="8"
+        android:text="더보기"
+        android:layout_gravity="right"
+        android:layout_margin="3dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Recent Music Sheet"
+        android:textSize="60px"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="0dp"
+        android:textColor="#000000"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#000000"
+        android:layout_margin="5dp"
+        android:layout_marginTop="0dp"/>
 
     <ListView
         android:id="@+id/musicSheet"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="0dp"
         android:layout_below="@+id/curSearch"
-        android:minHeight="50dp"></ListView>
+        android:minHeight="50dp"
+        android:layout_weight="42">
 
+    </ListView>
+    <Button
+        android:id="@+id/more_sheet"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="8"
+        android:text="더보기"
+        android:layout_gravity="right"
+        android:layout_margin="3dp"/>
 
-</RelativeLayout>
+</LinearLayout>
