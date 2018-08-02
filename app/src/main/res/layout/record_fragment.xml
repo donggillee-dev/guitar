@@ -3,19 +3,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_weight="1">
+
     <TextView
+        android:id="@+id/startListen"
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        android:text="Start Listening"
-        android:textStyle="bold"
-        android:textSize="45dp"
         android:gravity="center"
-        android:id="@+id/startListen"/>
+        android:layout_marginTop="20dp"
+        android:text="Start Listening"
+        android:textSize="45dp"
+        android:textStyle="bold" />
 
-    <ImageButton
+    <ToggleButton
         android:id="@+id/listenBtn"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="50dp"
         android:layout_below="@+id/startListen"
-        android:background="@mipmap/ic_launcher" />
+        android:background="@drawable/listenbtn"
+        android:textOff=""
+        android:textOn="" />
 </RelativeLayout>
