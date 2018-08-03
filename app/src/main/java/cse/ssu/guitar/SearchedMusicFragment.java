@@ -4,11 +4,16 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class SearchedMusicFragment extends Fragment {
     public static SearchedMusicFragment newInstance() {
@@ -37,7 +42,38 @@ public class SearchedMusicFragment extends Fragment {
         }
 
 
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView name_view, artist_view;
+                String name, artist;
+                Fragment fragment = MusicFragment.newInstance();
+                Bundle bundle = new Bundle();
+
+                name_view = (TextView)view.findViewById(R.id.textView1);
+                artist_view = (TextView)view.findViewById(R.id.textView2);
+                name = name_view.getText().toString();
+                artist = artist_view.getText().toString();
+
+                Log.v("debug", "item selected > " + name + " : " + artist);
+
+                bundle.putString("name", name);
+                bundle.putString("artist", artist);
+                fragment.setArguments(bundle);
+                replaceFragment(fragment);
+            }
+        });
+
+
+
+
         return view;
+    }
+
+    private void replaceFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
 }
