@@ -98,6 +98,7 @@ public class MyPageFragment extends Fragment {
 
                 bundle.putString("name", name);
                 bundle.putString("date", date);
+                bundle.putBoolean("key", false);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }

@@ -16,7 +16,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
+
+import VO.AlbumVO;
+import VO.ArtistVO;
+import VO.GenreVO;
+import VO.MusicVO;
 
 public class MusicFragment extends Fragment {
     View view;
@@ -33,14 +41,52 @@ public class MusicFragment extends Fragment {
         TextView name_text = (TextView)view.findViewById(R.id.name);
         TextView artist_text = (TextView)view.findViewById(R.id.artist);
         Button music_button, lyrics_button, similar_button;
-
+        Boolean key;
         String name, artist;
 
-        name = getArguments().getString("name");
-        artist = getArguments().getString("artist");
+        key = getArguments().getBoolean("key");
+        if(key == false) {
 
-        name_text.setText(name);
-        artist_text.setText(artist);
+            name = getArguments().getString("name");
+            artist = getArguments().getString("artist");
+
+            name_text.setText(name);
+            artist_text.setText(artist);
+        }
+        else {
+            String data = getArguments().getString("data");
+            Log.v("before parsing ** ", data);
+            MusicVO musicVO = new MusicVO();
+            try {
+                //필요없다고 생각한 정보들은 일단 주석처리
+
+                JSONObject object = null;
+                object = new JSONObject(data);
+                musicVO.setExternal_ids(object.getString("play_offset_ms"));
+                //musicVO.setExternal_metadata(object.getString("external_metadata"));
+                musicVO.setArtist(new ArtistVO(object.getString("artists")));
+                //장르 정보가 넘어올때가 있고 안넘어올때가 있어서 일단은 주석
+                //musicVO.setGenres(new GenreVO(object.getString("genres")));
+                musicVO.setTitle(object.getString("title"));
+                musicVO.setRelease_date(object.getString("release_date"));
+                musicVO.setLabel(object.getString("label"));
+                musicVO.setDuration_ms(Integer.parseInt(object.getString("duration_ms")));
+                musicVO.setAlbum(new AlbumVO(object.getString("album")));
+                //musicVO.setAcrid(object.getString("acrid"));
+                //musicVO.setResult_from(Integer.parseInt(object.getString("result_from")));
+                musicVO.setScore(Integer.parseInt(object.getString("score")));
+
+                Log.v("final debug", musicVO.toString());
+
+                name_text.setText(musicVO.getTitle());
+                artist_text.setText(musicVO.getArtist().getName());
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+        }
 
         music_button = (Button)view.findViewById(R.id.music);
         lyrics_button = (Button)view.findViewById(R.id.lyrics);

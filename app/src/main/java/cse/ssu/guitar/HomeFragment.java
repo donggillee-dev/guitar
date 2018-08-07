@@ -92,6 +92,7 @@ public class HomeFragment extends Fragment {
 
                 bundle.putString("name", name);
                 bundle.putString("artist", artist);
+                bundle.putBoolean("key", false);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }

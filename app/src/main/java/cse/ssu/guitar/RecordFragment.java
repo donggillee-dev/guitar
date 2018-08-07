@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -46,8 +48,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private ACRCloudClient mClient;
     private ACRCloudConfig mConfig;
 
-    private TextView mVolume, mResult, tv_time;
-
     private boolean mProcessing = false;
     private boolean initState = false;
 
@@ -74,44 +74,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             file.mkdirs();
         }
 
-        mVolume = (TextView) view.findViewById(R.id.volume);
-        mResult = (TextView) view.findViewById(R.id.result);
-        tv_time = (TextView) view.findViewById(R.id.time);
-
-        Button startBtn = (Button) view.findViewById(R.id.start);
-        startBtn.setText("start");
-
-        Button stopBtn = (Button) view.findViewById(R.id.stop);
-        stopBtn.setText("stop");
-
-        view.findViewById(R.id.stop).setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        stop();
-                    }
-                });
-
-        Button cancelBtn = (Button) view.findViewById(R.id.cancel);
-        cancelBtn.setText("cancel");
-
-        view.findViewById(R.id.start).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-                start();
-            }
-        });
-
-        view.findViewById(R.id.cancel).setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        cancel();
-                    }
-                });
 
 
         this.mConfig = new ACRCloudConfig();
@@ -164,7 +126,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             public void onClick(View view) {
                 if (listenBtn.isChecked() == true) {
                     if (recorder != null) {
-                        recorder.stop();
+                        //recorder.stop();
                         recorder.release();
                         recorder = null;
                     }
@@ -184,10 +146,12 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     recorder.setOutputFile(filename);
                     try {
                         Toast.makeText(getActivity(), "녹음이 시작되었습니다.", Toast.LENGTH_LONG).show();
-
+                        start();
                         // 녹음 준비,시작
                         recorder.prepare();
-                        recorder.start();
+                        //recorder.start();
+                        Log.v("debug", "before start");
+
                     } catch (Exception ex) {
                         Log.e("SampleAudioRecorder", "Exception : ", ex);
                     }
@@ -195,13 +159,15 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                 } else {
                     if (recorder == null)
                         return;
-
-                    recorder.stop();
+                    stop();
+                    //recorder.stop();
                     recorder.release();
                     recorder = null;
 
                     Toast.makeText(getActivity(),
                             "녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
+                    Log.v("debug", "before stop");
+
                     // TODO Auto-generated method stub
 
 
@@ -212,7 +178,9 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
         return view; // 여기서 UI를 생성해서 View를 return
     }
+
     public void start() {
+        Log.v("debug", "start api");
         if (!this.initState) {
             Toast.makeText(getActivity(), "init error", Toast.LENGTH_SHORT).show();
             return;
@@ -220,17 +188,15 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
         if (!mProcessing) {
             mProcessing = true;
-            mVolume.setText("");
-            mResult.setText("");
             if (this.mClient == null || !this.mClient.startRecognize()) {
                 mProcessing = false;
-                mResult.setText("start error!");
             }
             startTime = System.currentTimeMillis();
         }
     }
 
     protected void stop() {
+        Log.v("debug", "in stop");
         if (mProcessing && this.mClient != null) {
             this.mClient.stopRecordToRecognize();
         }
@@ -243,8 +209,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         if (mProcessing && this.mClient != null) {
             mProcessing = false;
             this.mClient.cancel();
-            tv_time.setText("");
-            mResult.setText("");
         }
     }
 
@@ -260,6 +224,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         String tres = "\n";
 
         try {
+            JSONObject tt = null;
             JSONObject j = new JSONObject(result);
             JSONObject j1 = j.getJSONObject("status");
             int j2 = j1.getInt("code");
@@ -269,7 +234,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                 if (metadata.has("humming")) {
                     JSONArray hummings = metadata.getJSONArray("humming");
                     for(int i=0; i<hummings.length(); i++) {
-                        JSONObject tt = (JSONObject) hummings.get(i);
+                        tt = (JSONObject) hummings.get(i);
                         String title = tt.getString("title");
                         JSONArray artistt = tt.getJSONArray("artists");
                         JSONObject art = (JSONObject) artistt.get(0);
@@ -277,10 +242,11 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                         tres = tres + (i+1) + ".  " + title + "\n";
                     }
                 }
+
                 if (metadata.has("music")) {
                     JSONArray musics = metadata.getJSONArray("music");
                     for(int i=0; i<musics.length(); i++) {
-                        JSONObject tt = (JSONObject) musics.get(i);
+                        tt = (JSONObject) musics.get(i);
                         String title = tt.getString("title");
                         JSONArray artistt = tt.getJSONArray("artists");
                         JSONObject art = (JSONObject) artistt.get(0);
@@ -291,7 +257,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                 if (metadata.has("streams")) {
                     JSONArray musics = metadata.getJSONArray("streams");
                     for(int i=0; i<musics.length(); i++) {
-                        JSONObject tt = (JSONObject) musics.get(i);
+                        tt = (JSONObject) musics.get(i);
                         String title = tt.getString("title");
                         String channelId = tt.getString("channel_id");
                         tres = tres + (i+1) + ".  Title: " + title + "    Channel Id: " + channelId + "\n";
@@ -300,12 +266,23 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                 if (metadata.has("custom_files")) {
                     JSONArray musics = metadata.getJSONArray("custom_files");
                     for(int i=0; i<musics.length(); i++) {
-                        JSONObject tt = (JSONObject) musics.get(i);
+                        tt = (JSONObject) musics.get(i);
                         String title = tt.getString("title");
                         tres = tres + (i+1) + ".  Title: " + title + "\n";
                     }
                 }
                 tres = tres + "\n\n" + result;
+                Log.v("debug", tt.toString());
+                if(tt != null) {
+                    stop();
+                    listenBtn.setChecked(false);
+                    Fragment fragment = MusicFragment.newInstance();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("data", tt.toString());
+                    bundle.putBoolean("key", true);
+                    fragment.setArguments(bundle);
+                    replaceFragment(fragment);
+                }
             }else{
                 tres = result;
             }
@@ -313,14 +290,11 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             tres = result;
             e.printStackTrace();
         }
-
-        mResult.setText(tres);
     }
 
     @Override
     public void onVolumeChanged(double volume) {
         long time = (System.currentTimeMillis() - startTime) / 1000;
-        mVolume.setText("volume: " + volume + "\n\n录音时间：" + time + " s");
     }
 
     @Override
@@ -332,5 +306,11 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             this.initState = false;
             this.mClient = null;
         }
+    }
+
+    private void replaceFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 }
