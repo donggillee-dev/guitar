@@ -30,5 +30,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support:design:26.+'
     compile 'com.android.support:support-vector-drawable:26.+'
+    compile files('libs/acrcloud-android-sdk-1.5.7.3.jar')
     testCompile 'junit:junit:4.12'
 }

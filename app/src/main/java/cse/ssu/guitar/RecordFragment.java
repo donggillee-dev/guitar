@@ -11,19 +11,29 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import com.acrcloud.rec.sdk.ACRCloudClient;
+import com.acrcloud.rec.sdk.ACRCloudConfig;
+import com.acrcloud.rec.sdk.IACRCloudListener;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 
 /**
  * Created by 성민우 on 2018-08-01.
  */
-public class RecordFragment extends Fragment {
+public class RecordFragment extends Fragment implements IACRCloudListener {
     public static RecordFragment newInstance() {
         return new RecordFragment();
     }
@@ -32,6 +42,19 @@ public class RecordFragment extends Fragment {
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE = 1;
     ToggleButton listenBtn;
     Button play, stop;
+
+    private ACRCloudClient mClient;
+    private ACRCloudConfig mConfig;
+
+    private TextView mVolume, mResult, tv_time;
+
+    private boolean mProcessing = false;
+    private boolean initState = false;
+
+    private String path = "";
+
+    private long startTime = 0;
+    private long stopTime = 0;
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
     final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
 
@@ -43,12 +66,81 @@ public class RecordFragment extends Fragment {
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.record_fragment, container, false);
+        path = Environment.getExternalStorageDirectory().toString()
+                + "/acrcloud/model";
 
-        filename = RECORDED_FILE.getAbsolutePath() + "/test.mp4";
-        ;
+        File file = new File(path);
+        if(!file.exists()){
+            file.mkdirs();
+        }
+
+        mVolume = (TextView) view.findViewById(R.id.volume);
+        mResult = (TextView) view.findViewById(R.id.result);
+        tv_time = (TextView) view.findViewById(R.id.time);
+
+        Button startBtn = (Button) view.findViewById(R.id.start);
+        startBtn.setText("start");
+
+        Button stopBtn = (Button) view.findViewById(R.id.stop);
+        stopBtn.setText("stop");
+
+        view.findViewById(R.id.stop).setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        stop();
+                    }
+                });
+
+        Button cancelBtn = (Button) view.findViewById(R.id.cancel);
+        cancelBtn.setText("cancel");
+
+        view.findViewById(R.id.start).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                start();
+            }
+        });
+
+        view.findViewById(R.id.cancel).setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        cancel();
+                    }
+                });
+
+
+        this.mConfig = new ACRCloudConfig();
+        this.mConfig.acrcloudListener = this;
+
+        // If you implement IACRCloudResultWithAudioListener and override "onResult(ACRCloudResult result)", you can get the Audio data.
+        //this.mConfig.acrcloudResultWithAudioListener = this;
+
+        this.mConfig.context = getActivity();
+        this.mConfig.host = "identify-ap-southeast-1.acrcloud.com";
+        this.mConfig.dbPath = path; // offline db path, you can change it with other path which this app can access.
+        this.mConfig.accessKey = "6b65a3f0beacac7bb9d9e60a0ce9a939";
+        this.mConfig.accessSecret = "VfKG2Y8PGSkOxl3b9So9jhHlGpaepZHxMLESypl9";
+        this.mConfig.protocol = ACRCloudConfig.ACRCloudNetworkProtocol.PROTOCOL_HTTP; // PROTOCOL_HTTPS
+        this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_REMOTE;
+        //this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_LOCAL;
+        //this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_BOTH;
+
+        this.mClient = new ACRCloudClient();
+        // If reqMode is REC_MODE_LOCAL or REC_MODE_BOTH,
+        // the function initWithConfig is used to load offline db, and it may cost long time.
+        this.initState = this.mClient.initWithConfig(this.mConfig);
+        if (this.initState) {
+            this.mClient.startPreRecord(3000); //start prerecord, you can call "this.mClient.stopPreRecord()" to stop prerecord.
+        }
+
+        filename = RECORDED_FILE.getAbsolutePath() + "/test.mp3";
+
         listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
-        play = (Button) view.findViewById(R.id.play);
-        stop = (Button) view.findViewById(R.id.stop);
 
 
         int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO);
@@ -119,5 +211,126 @@ public class RecordFragment extends Fragment {
         });
 
         return view; // 여기서 UI를 생성해서 View를 return
+    }
+    public void start() {
+        if (!this.initState) {
+            Toast.makeText(getActivity(), "init error", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!mProcessing) {
+            mProcessing = true;
+            mVolume.setText("");
+            mResult.setText("");
+            if (this.mClient == null || !this.mClient.startRecognize()) {
+                mProcessing = false;
+                mResult.setText("start error!");
+            }
+            startTime = System.currentTimeMillis();
+        }
+    }
+
+    protected void stop() {
+        if (mProcessing && this.mClient != null) {
+            this.mClient.stopRecordToRecognize();
+        }
+        mProcessing = false;
+
+        stopTime = System.currentTimeMillis();
+    }
+
+    protected void cancel() {
+        if (mProcessing && this.mClient != null) {
+            mProcessing = false;
+            this.mClient.cancel();
+            tv_time.setText("");
+            mResult.setText("");
+        }
+    }
+
+
+    // Old api
+    @Override
+    public void onResult(String result) {
+        if (this.mClient != null) {
+            this.mClient.cancel();
+            mProcessing = false;
+        }
+
+        String tres = "\n";
+
+        try {
+            JSONObject j = new JSONObject(result);
+            JSONObject j1 = j.getJSONObject("status");
+            int j2 = j1.getInt("code");
+            if(j2 == 0){
+                JSONObject metadata = j.getJSONObject("metadata");
+                //
+                if (metadata.has("humming")) {
+                    JSONArray hummings = metadata.getJSONArray("humming");
+                    for(int i=0; i<hummings.length(); i++) {
+                        JSONObject tt = (JSONObject) hummings.get(i);
+                        String title = tt.getString("title");
+                        JSONArray artistt = tt.getJSONArray("artists");
+                        JSONObject art = (JSONObject) artistt.get(0);
+                        String artist = art.getString("name");
+                        tres = tres + (i+1) + ".  " + title + "\n";
+                    }
+                }
+                if (metadata.has("music")) {
+                    JSONArray musics = metadata.getJSONArray("music");
+                    for(int i=0; i<musics.length(); i++) {
+                        JSONObject tt = (JSONObject) musics.get(i);
+                        String title = tt.getString("title");
+                        JSONArray artistt = tt.getJSONArray("artists");
+                        JSONObject art = (JSONObject) artistt.get(0);
+                        String artist = art.getString("name");
+                        tres = tres + (i+1) + ".  Title: " + title + "    Artist: " + artist + "\n";
+                    }
+                }
+                if (metadata.has("streams")) {
+                    JSONArray musics = metadata.getJSONArray("streams");
+                    for(int i=0; i<musics.length(); i++) {
+                        JSONObject tt = (JSONObject) musics.get(i);
+                        String title = tt.getString("title");
+                        String channelId = tt.getString("channel_id");
+                        tres = tres + (i+1) + ".  Title: " + title + "    Channel Id: " + channelId + "\n";
+                    }
+                }
+                if (metadata.has("custom_files")) {
+                    JSONArray musics = metadata.getJSONArray("custom_files");
+                    for(int i=0; i<musics.length(); i++) {
+                        JSONObject tt = (JSONObject) musics.get(i);
+                        String title = tt.getString("title");
+                        tres = tres + (i+1) + ".  Title: " + title + "\n";
+                    }
+                }
+                tres = tres + "\n\n" + result;
+            }else{
+                tres = result;
+            }
+        } catch (JSONException e) {
+            tres = result;
+            e.printStackTrace();
+        }
+
+        mResult.setText(tres);
+    }
+
+    @Override
+    public void onVolumeChanged(double volume) {
+        long time = (System.currentTimeMillis() - startTime) / 1000;
+        mVolume.setText("volume: " + volume + "\n\n录音时间：" + time + " s");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.e("MainActivity", "release");
+        if (this.mClient != null) {
+            this.mClient.release();
+            this.initState = false;
+            this.mClient = null;
+        }
     }
 }
