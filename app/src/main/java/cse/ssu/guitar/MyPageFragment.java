@@ -34,14 +34,14 @@ public class MyPageFragment extends Fragment {
 
     private ListView music, sheet;
     private ListViewAdapter music_adapter, sheet_adapter;
-
+    private Button music_more, sheet_more;
+    private View view;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.mypage_fragment, container, false);
+        view = inflater.inflate(R.layout.mypage_fragment, container, false);
 
 
         music_adapter = new ListViewAdapter();
         sheet_adapter = new ListViewAdapter();
-        Button music_more, sheet_more;
 
         music = (ListView) view.findViewById(R.id.curSearch);
         sheet = (ListView) view.findViewById(R.id.musicSheet);
@@ -148,17 +148,39 @@ public class MyPageFragment extends Fragment {
 
         List<String> filesNameList = new ArrayList<>();
 
-        for (int i = 0; i < files.length; i++) {
-            filesNameList.add(files[i].getName());
+
+
+        if(files != null) {
+
+            for (int i = 0; i < files.length; i++) {
+                filesNameList.add(files[i].getName());
+            }
+
+            Collections.sort(filesNameList, new AscendingString());
+            if(files.length >= 3) {
+                for (int i = 0; i < 3; i++) {
+                    String filename = filesNameList.get(i).substring(0, 12);
+                    String date = parseDate(filename);
+                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                            filename, date);
+                }
+            }
+            else {
+                for (int i = 0; i < files.length; i++) {
+                    String filename = filesNameList.get(i).substring(0, 12);
+                    String date = parseDate(filename);
+                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                            filename, date);
+                }
+            }
+
         }
-
-        Collections.sort(filesNameList, new AscendingString());
-
-        for(int i = 0; i < 3; i++) {
-            String filename = filesNameList.get(i).substring(0, 12);
-            String date = parseDate(filename);
-            sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
-                    filename , date);
+        else {
+            sheet.setVisibility(View.GONE);
+            TextView text = (TextView) view.findViewById(R.id.sheet_text);
+            text.setVisibility(View.VISIBLE);
+            text.setText("No Music Sheet");
+            sheet_more.setVisibility(View.INVISIBLE);
         }
 
     }
