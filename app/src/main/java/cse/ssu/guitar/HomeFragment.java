@@ -46,16 +46,29 @@ public class HomeFragment extends Fragment {
         final BottomNavigationView menu = (BottomNavigationView)activity.findViewById(R.id.navigation);
 
 
-        ImageButton start = (ImageButton) view.findViewById(R.id.start);
+        ImageButton start = (ImageButton) view.findViewById(R.id.start_record);
         start.setOnClickListener(new ImageButton.OnClickListener() {
 
             @SuppressLint("RestrictedApi")
             @Override
             public void onClick(View view) {
-                Log.v("debug","clickBnt");
+                //Log.v("debug","clickBnt");
                 replaceFragment(RecordFragment.newInstance());
                 //누르는 경우 하단 메뉴도 함께 변경
                 menu.setSelectedItemId(R.id.navigation_dashboard);
+            }
+        });
+
+        ImageButton sheet = (ImageButton) view.findViewById(R.id.start_sheet);
+        sheet.setOnClickListener(new ImageButton.OnClickListener() {
+
+            @SuppressLint("RestrictedApi")
+            @Override
+            public void onClick(View view) {
+                //Log.v("debug","clickBnt");
+                replaceFragment(MakeSheetFragment.newInstance());
+                //누르는 경우 하단 메뉴도 함께 변경
+                menu.setSelectedItemId(R.id.navigation_sheet);
             }
         });
         // 리스트뷰 참조 및 Adapter달기
