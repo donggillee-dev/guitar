@@ -2,6 +2,7 @@
     <string name="app_name">Guitar</string>
     <string name="title_home">Home</string>
     <string name="title_record">Listen</string>
+    <string name="title_sheet">Music Sheet</string>
     <string name="title_mypage">My Page</string>
 
     <!-- TODO: Remove or change this placeholder text -->

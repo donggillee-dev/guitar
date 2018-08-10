@@ -12,6 +12,11 @@
         android:title="@string/title_record" />
 
     <item
+        android:id="@+id/navigation_sheet"
+        android:icon="@drawable/ic_audiotrack_black_24dp"
+        android:title="@string/title_sheet" />
+
+    <item
         android:id="@+id/navigation_notifications"
         android:icon="@drawable/ic_mypage_black_24dp"
         android:title="@string/title_mypage" />

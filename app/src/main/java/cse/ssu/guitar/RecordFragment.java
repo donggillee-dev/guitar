@@ -31,6 +31,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by 성민우 on 2018-08-01.
@@ -43,7 +46,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE = 1;
     ToggleButton listenBtn;
-    Button play, stop;
 
     private ACRCloudClient mClient;
     private ACRCloudConfig mConfig;
@@ -52,17 +54,18 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private boolean initState = false;
 
     private String path = "";
+    private boolean recordCheck = true;
 
     private long startTime = 0;
     private long stopTime = 0;
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
     final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
 
-    String filename;
+    private String filename;
     // MediaPlayer 클래스에 재생에 관련된 메서드와 멤버변수가 저장어되있다.
-    MediaPlayer player;
+    private MediaPlayer player;
     // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
-    MediaRecorder recorder;
+    private MediaRecorder recorder;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.record_fragment, container, false);
@@ -100,7 +103,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             this.mClient.startPreRecord(3000); //start prerecord, you can call "this.mClient.stopPreRecord()" to stop prerecord.
         }
 
-        filename = RECORDED_FILE.getAbsolutePath() + "/test.mp3";
 
         listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
 
@@ -126,46 +128,24 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             public void onClick(View view) {
                 if (listenBtn.isChecked() == true) {
                     if (recorder != null) {
-                        //recorder.stop();
+                        recorder.stop();
                         recorder.release();
                         recorder = null;
                     }
 
                     // 실험 결과 왠만하면 아래 recorder 객체의 속성을 지정하는 순서는 이대로 하는게 좋다 위치를 바꿨을때 에러가 났었음
                     // 녹음 시작을 위해  MediaRecorder 객체  recorder를 생성한다.
-                    recorder = new MediaRecorder();
-                    // 오디오 입력 형식 설정
-                    recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                    recorder.setAudioSamplingRate(44100);
-                    recorder.setAudioEncodingBitRate(96000);
-                    // 음향을 저장할 방식을 설정
-                    recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                    // 오디오 인코더 설정
-                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                    // 저장될 파일 지정
-                    recorder.setOutputFile(filename);
-                    try {
-                        Toast.makeText(getActivity(), "녹음이 시작되었습니다.", Toast.LENGTH_LONG).show();
-                        start();
-                        // 녹음 준비,시작
-                        recorder.prepare();
-                        //recorder.start();
-                        Log.v("debug", "before start");
 
-                    } catch (Exception ex) {
-                        Log.e("SampleAudioRecorder", "Exception : ", ex);
-                    }
+
+                    start();
 
                 } else {
                     if (recorder == null)
                         return;
-                    stop();
-                    //recorder.stop();
-                    recorder.release();
-                    recorder = null;
 
-                    Toast.makeText(getActivity(),
-                            "녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
+                    stop();
+                    Toast.makeText(getActivity(),"녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
+
                     Log.v("debug", "before stop");
 
                     // TODO Auto-generated method stub
@@ -205,12 +185,12 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         stopTime = System.currentTimeMillis();
     }
 
-    protected void cancel() {
-        if (mProcessing && this.mClient != null) {
-            mProcessing = false;
-            this.mClient.cancel();
-        }
-    }
+//    protected void cancel() {
+//        if (mProcessing && this.mClient != null) {
+//            mProcessing = false;
+//            this.mClient.cancel();
+//        }
+//    }
 
 
     // Old api
@@ -220,8 +200,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             this.mClient.cancel();
             mProcessing = false;
         }
-
-        String tres = "\n";
 
         try {
             JSONObject tt = null;
@@ -239,7 +217,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                         JSONArray artistt = tt.getJSONArray("artists");
                         JSONObject art = (JSONObject) artistt.get(0);
                         String artist = art.getString("name");
-                        tres = tres + (i+1) + ".  " + title + "\n";
                     }
                 }
 
@@ -251,7 +228,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                         JSONArray artistt = tt.getJSONArray("artists");
                         JSONObject art = (JSONObject) artistt.get(0);
                         String artist = art.getString("name");
-                        tres = tres + (i+1) + ".  Title: " + title + "    Artist: " + artist + "\n";
                     }
                 }
                 if (metadata.has("streams")) {
@@ -260,7 +236,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                         tt = (JSONObject) musics.get(i);
                         String title = tt.getString("title");
                         String channelId = tt.getString("channel_id");
-                        tres = tres + (i+1) + ".  Title: " + title + "    Channel Id: " + channelId + "\n";
                     }
                 }
                 if (metadata.has("custom_files")) {
@@ -268,10 +243,8 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     for(int i=0; i<musics.length(); i++) {
                         tt = (JSONObject) musics.get(i);
                         String title = tt.getString("title");
-                        tres = tres + (i+1) + ".  Title: " + title + "\n";
                     }
                 }
-                tres = tres + "\n\n" + result;
                 Log.v("debug", tt.toString());
                 if(tt != null) {
                     stop();
@@ -283,11 +256,8 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     fragment.setArguments(bundle);
                     replaceFragment(fragment);
                 }
-            }else{
-                tres = result;
             }
         } catch (JSONException e) {
-            tres = result;
             e.printStackTrace();
         }
     }
@@ -313,4 +283,5 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
+
 }

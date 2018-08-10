@@ -33,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.navigation_dashboard:
                     replaceFragment(RecordFragment.newInstance());
                     return true;
+                case R.id.navigation_sheet:
+                    replaceFragment(MakeSheetFragment.newInstance());
+                    return true;
                 case R.id.navigation_notifications:
                     replaceFragment(MyPageFragment.newInstance());
                     return true;

@@ -11,8 +11,8 @@ import android.widget.TextView;
 
 public class SheetFragment extends Fragment {
     View view;
-    TextView name_view, date_view;
-    String name, date;
+    private TextView name_view, date_view;
+    private String name, date;
 
     public static SheetFragment newInstance() {
         return new SheetFragment();
@@ -26,8 +26,10 @@ public class SheetFragment extends Fragment {
         name = getArguments().getString("name");
         date = getArguments().getString("date");
 
+
         name_view.setText(name);
         date_view.setText(date);
+
 
 
         return view;

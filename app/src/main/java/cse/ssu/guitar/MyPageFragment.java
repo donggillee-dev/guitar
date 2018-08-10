@@ -74,6 +74,7 @@ public class MyPageFragment extends Fragment {
 
                 Log.v("debug", "item selected > " + name + " : " + artist);
 
+                bundle.putBoolean("key", false);
                 bundle.putString("name", name);
                 bundle.putString("artist", artist);
                 fragment.setArguments(bundle);
@@ -98,7 +99,6 @@ public class MyPageFragment extends Fragment {
 
                 bundle.putString("name", name);
                 bundle.putString("date", date);
-                bundle.putBoolean("key", false);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }

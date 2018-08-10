@@ -11,8 +11,8 @@
         android:layout_height="100dp"
         android:layout_marginTop="20dp"
         android:gravity="center"
-        android:text="Recognize Music"
-        android:textSize="45dp"
+        android:text="Create Music Sheet"
+        android:textSize="40dp"
         android:textStyle="bold" />
 
     <ToggleButton

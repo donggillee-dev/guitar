@@ -81,6 +81,8 @@ public class MusicFragment extends Fragment {
                 name_text.setText(musicVO.getTitle());
                 artist_text.setText(musicVO.getArtist().getName());
 
+                saveData(musicVO);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -149,6 +151,11 @@ public class MusicFragment extends Fragment {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
+    }
+
+    //디비에 찾은 음악 정보를 저장하는 함수
+    private void saveData(MusicVO musicVO) {
+
     }
 
 }
