@@ -69,7 +69,7 @@ public class MusicFragment extends Fragment {
                 //musicVO.setGenres(new GenreVO(object.getString("genres")));
                 musicVO.setTitle(object.getString("title"));
                 musicVO.setRelease_date(object.getString("release_date"));
-                musicVO.setLabel(object.getString("label"));
+                //musicVO.setLabel(object.getString("label"));
                 musicVO.setDuration_ms(Integer.parseInt(object.getString("duration_ms")));
                 musicVO.setAlbum(new AlbumVO(object.getString("album")));
                 //musicVO.setAcrid(object.getString("acrid"));
