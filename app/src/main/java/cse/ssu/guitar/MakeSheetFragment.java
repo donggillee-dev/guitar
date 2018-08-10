@@ -43,6 +43,8 @@ public class MakeSheetFragment extends Fragment {
     private String filename;
     private String time;
     private String date;
+    private String filepath;
+
     // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
     MediaRecorder recorder;
 
@@ -87,6 +89,12 @@ public class MakeSheetFragment extends Fragment {
                     // 오디오 인코더 설정
                     recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 
+                    filepath = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar";
+                    File file = new File(filepath);
+                    if(!file.exists()){
+                        file.mkdirs();
+                    }
+
                     //파일명 임의로 생성
                     SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmmss");
                     SimpleDateFormat format_2 = new SimpleDateFormat("yyyy-MM-dd");
@@ -94,7 +102,7 @@ public class MakeSheetFragment extends Fragment {
                     time = format.format(currentTime);
                     date = format_2.format(currentTime);
                     Log.v("time", time);
-                    filename = RECORDED_FILE.getAbsolutePath() + "/" + time + ".mp3";
+                    filename = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/" + time + ".mp3";
 
                     // 저장될 파일 지정
                     recorder.setOutputFile(filename);
