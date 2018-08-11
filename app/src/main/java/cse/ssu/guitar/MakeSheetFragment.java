@@ -17,7 +17,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -44,14 +47,15 @@ public class MakeSheetFragment extends Fragment {
     private String time;
     private String date;
     private String filepath;
+    private ImageView loader;
+    private Animation animation;
 
     // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
     MediaRecorder recorder;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_make_sheet, container, false);
-
-
+        loader = (ImageView)view.findViewById(R.id.loader);
         listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
 
         int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO);
@@ -108,6 +112,8 @@ public class MakeSheetFragment extends Fragment {
                     recorder.setOutputFile(filename);
                     try {
                         Toast.makeText(getActivity(), "녹음이 시작되었습니다.", Toast.LENGTH_LONG).show();
+                        animation = AnimationUtils.loadAnimation(getActivity(),R.anim.rotate);
+                        loader.startAnimation(animation);
                         // 녹음 준비,시작
                         recorder.prepare();
                         recorder.start();
@@ -123,7 +129,8 @@ public class MakeSheetFragment extends Fragment {
                     Toast.makeText(getActivity(),
                             "녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
                     // TODO Auto-generated method stub
-
+                    loader.clearAnimation();
+                    animation.setAnimationListener(null);
                     Bundle bundle = new Bundle();
                     Fragment fragment = SheetFragment.newInstance();
 
