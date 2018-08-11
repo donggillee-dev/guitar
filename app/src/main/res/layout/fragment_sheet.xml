@@ -44,58 +44,62 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:weightSum="120"
-        android:orientation="vertical"
-        android:layout_weight="70">
+        android:id="@+id/noteLayout"
+        >
 
         <ImageView
             android:id="@+id/line1"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
+            android:layout_height="80dp"
             android:background="@drawable/sheet"/>
 
         <ImageView
             android:id="@+id/line2"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
+            android:layout_height="80dp"
+            android:layout_below="@+id/line1"
             android:background="@drawable/sheet"/>
 
         <ImageView
             android:id="@+id/line3"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
+            android:layout_height="80dp"
+            android:layout_below="@+id/line2"
             android:background="@drawable/sheet"/>
 
         <ImageView
             android:id="@+id/line4"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
+            android:layout_height="80dp"
+            android:layout_below="@+id/line3"
             android:background="@drawable/sheet"/>
 
         <ImageView
             android:id="@+id/line5"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
+            android:layout_height="80dp"
+            android:layout_below="@+id/line4"
             android:background="@drawable/sheet"/>
 
         <ImageView
             android:id="@+id/line6"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
+            android:layout_height="80dp"
+            android:layout_below="@+id/line5"
             android:background="@drawable/sheet"/>
 
-
-
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/note"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="50dp"
+            android:layout_marginTop="25dp"
+            android:background="@drawable/quarter_note_16" />
+    </RelativeLayout>
 
 
 </LinearLayout>
