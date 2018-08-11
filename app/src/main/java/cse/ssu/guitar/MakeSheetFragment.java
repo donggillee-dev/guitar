@@ -40,7 +40,6 @@ public class MakeSheetFragment extends Fragment {
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE = 1;
     ToggleButton listenBtn;
-    Button play, stop;
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
     final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
     private String filename;

@@ -35,9 +35,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import VO.AlbumVO;
+import VO.ArtistVO;
+import VO.DataVO;
+import VO.MusicVO;
 
 /**
  * Created by 성민우 on 2018-08-01.
@@ -253,6 +259,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     listenBtn.setChecked(false);
                     Fragment fragment = MusicFragment.newInstance();
                     Bundle bundle = new Bundle();
+                    parseData(tt.toString());
                     bundle.putString("data", tt.toString());
                     bundle.putBoolean("key", true);
                     fragment.setArguments(bundle);
@@ -284,6 +291,63 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
+    }
+
+    private void parseData(String data) {
+        MusicVO musicVO = new MusicVO();
+        try {
+            //필요없다고 생각한 정보들은 일단 주석처리
+
+            JSONObject object = null;
+            object = new JSONObject(data);
+            musicVO.setExternal_ids(object.getString("play_offset_ms"));
+            //musicVO.setExternal_metadata(object.getString("external_metadata"));
+            musicVO.setArtist(new ArtistVO(object.getString("artists")));
+            //장르 정보가 넘어올때가 있고 안넘어올때가 있어서 일단은 주석
+            //musicVO.setGenres(new GenreVO(object.getString("genres")));
+            musicVO.setTitle(object.getString("title"));
+            musicVO.setRelease_date(object.getString("release_date"));
+            //musicVO.setLabel(object.getString("label"));
+            musicVO.setDuration_ms(Integer.parseInt(object.getString("duration_ms")));
+            musicVO.setAlbum(new AlbumVO(object.getString("album")));
+            //musicVO.setAcrid(object.getString("acrid"));
+            //musicVO.setResult_from(Integer.parseInt(object.getString("result_from")));
+            musicVO.setScore(Integer.parseInt(object.getString("score")));
+
+            Log.v("final debug", musicVO.toString());
+
+            sendData(musicVO);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendData(MusicVO musicVO) {
+        String filepath = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/log";
+
+        File file = new File(filepath);
+        if(!file.exists()){
+            file.mkdirs();
+        }
+
+        SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmmss");
+        SimpleDateFormat format_2 = new SimpleDateFormat("yyyy-MM-dd");
+        Date currentTime = new Date();
+        String title = format.format(currentTime);
+        String date = format_2.format(currentTime);
+
+
+        DataVO data = new DataVO(musicVO.getArtist().getName(), musicVO.getTitle(), musicVO.getAlbum().getName(), date);
+
+        File savefile = new File(filepath+"/"+title+".txt");
+        try{
+            FileOutputStream fos = new FileOutputStream(savefile);
+            fos.write(data.toString().getBytes());
+            fos.close();
+        } catch(IOException e){
+            e.printStackTrace();
+        }
     }
 
 }

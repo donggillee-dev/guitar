@@ -52,10 +52,9 @@ public class MyPageFragment extends Fragment {
         music.setAdapter(music_adapter);
         sheet.setAdapter(sheet_adapter);
 
+
         //임의로 데이터 3개씩 삽입
-        for (int i = 0; i < 3; i++)
-            music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_home_black_24dp),
-                    "Test Music", "Account Circle Black 36dp");
+
 
         //현재 날짜 구하기
         Long now = System.currentTimeMillis();
@@ -64,7 +63,7 @@ public class MyPageFragment extends Fragment {
         String date_string = sdf.format(date);
         Log.v("debug", date_string);
 
-
+        add_music_list();
         add_sheet_list();
 
 
@@ -150,15 +149,16 @@ public class MyPageFragment extends Fragment {
 
 
 
-        if(files != null) {
-
+        if(files.length > 1) {
+            Log.v("length", ""+files.length);
             for (int i = 0; i < files.length; i++) {
                 filesNameList.add(files[i].getName());
             }
 
             Collections.sort(filesNameList, new AscendingString());
-            if(files.length >= 3) {
-                for (int i = 0; i < 3; i++) {
+            if(files.length > 3) {
+                for (int i = 1; i < 4; i++) {
+
                     String filename = filesNameList.get(i).substring(0, 12);
                     String date = parseDate(filename);
                     sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
@@ -166,7 +166,7 @@ public class MyPageFragment extends Fragment {
                 }
             }
             else {
-                for (int i = 0; i < files.length; i++) {
+                for (int i = 1; i < files.length; i++) {
                     String filename = filesNameList.get(i).substring(0, 12);
                     String date = parseDate(filename);
                     sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
@@ -175,12 +175,58 @@ public class MyPageFragment extends Fragment {
             }
 
         }
-        else {
+        else if(files.length <= 1){
             sheet.setVisibility(View.GONE);
             TextView text = (TextView) view.findViewById(R.id.sheet_text);
             text.setVisibility(View.VISIBLE);
             text.setText("No Music Sheet");
             sheet_more.setVisibility(View.INVISIBLE);
+        }
+
+    }
+
+    private void add_music_list() {
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+
+        List<String> filesNameList = new ArrayList<>();
+
+
+
+        if(files.length != 0) {
+            Log.v("length in music", ""+files.length);
+            for (int i = 0; i < files.length; i++) {
+                filesNameList.add(files[i].getName());
+            }
+            Log.v("file name", filesNameList.get(0));
+
+            Collections.sort(filesNameList, new AscendingString());
+            if(files.length >= 3) {
+                for (int i = 0; i < 3; i++) {
+
+                    String filename = filesNameList.get(i).substring(0, 12);
+                    String date = parseDate(filename);
+                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                            filename, date);
+                }
+            }
+            else {
+                for (int i = 0; i < files.length; i++) {
+                    String filename = filesNameList.get(i).substring(0, 12);
+                    String date = parseDate(filename);
+                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                            filename, date);
+                }
+            }
+
+        }
+        else if(files.length == 0){
+            music.setVisibility(View.GONE);
+            TextView text = (TextView) view.findViewById(R.id.music_text);
+            text.setVisibility(View.VISIBLE);
+            text.setText("No Music List");
+            music_more.setVisibility(View.INVISIBLE);
         }
 
     }

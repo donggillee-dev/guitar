@@ -99,7 +99,8 @@ public class SheetListFragment extends Fragment {
 
         Collections.sort(filesNameList, new AscendingString());
 
-        for(int i = 0; i < filesNameList.size(); i++) {
+        for(int i = 1; i < filesNameList.size(); i++) {
+
             String filename = filesNameList.get(i).substring(0, 12);
             String date = parseDate(filename);
             adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),

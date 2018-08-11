@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.internal.BottomNavigationItemView;
 import android.support.design.widget.BottomNavigationView;
@@ -24,8 +25,21 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import VO.DataVO;
 
 /**
  * Created by 성민우 on 2018-08-01.
@@ -36,11 +50,13 @@ public class HomeFragment extends Fragment {
         return new HomeFragment();
     }
 
-    public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
-        ListView listview;
-        ListViewAdapter adapter;
+    private ListView listview;
+    private ListViewAdapter adapter;
+    private View view;
 
-        View view = inflater.inflate(R.layout.home_fragment, container, false);
+    public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
+
+        view = inflater.inflate(R.layout.home_fragment, container, false);
 
         Activity activity = (MainActivity)getActivity();
         final BottomNavigationView menu = (BottomNavigationView)activity.findViewById(R.id.navigation);
@@ -78,15 +94,10 @@ public class HomeFragment extends Fragment {
         listview = (ListView) view.findViewById(R.id.curSearch);
         listview.setAdapter(adapter);
 
-        Log.v("debug", "yes!");
-        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_dashboard_black_24dp),
-                "Box", "Account Box Black 36dp");
-        // 두 번째 아이템 추가.
-        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_home_black_24dp),
-                "Circle", "Account Circle Black 36dp");
-        // 세 번째 아이템 추가.
-        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_notifications_black_24dp),
-                "Ind", "Assignment Ind Black 36dp");
+        addlist();
+
+
+
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -131,5 +142,95 @@ public class HomeFragment extends Fragment {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
+    }
+
+    private void addlist() {
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+
+        String realPath = path;
+        List<String> filesNameList = new ArrayList<>();
+
+
+        if (files.length != 0) {
+
+            for (int i = 0; i < files.length; i++) {
+                filesNameList.add(files[i].getName());
+            }
+
+            Collections.sort(filesNameList, new AscendingString());
+            DataVO dataVO = null;
+            if (files.length >= 3) {
+                for (int i = 0; i < 3; i++) {
+                    realPath = path + "/"+filesNameList.get(i).subSequence(0, 12);
+
+                    try {
+                        FileInputStream fis = new FileInputStream(realPath);
+                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                        String result="", temp="";
+                        while( (temp = bufferReader.readLine()) != null ) {
+                            result += temp;
+                        }
+
+                        dataVO= parseData(result);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                            dataVO.getTitle(), dataVO.getArtist());
+                }
+            } else {
+                for (int i = 0; i < files.length; i++) {
+                    realPath = path + "/"+filesNameList.get(i);
+
+                    try {
+                        FileInputStream fis = new FileInputStream(realPath);
+                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                        String result="", temp="";
+                        while( (temp = bufferReader.readLine()) != null ) {
+                            result += temp;
+                        }
+
+                        dataVO = parseData(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
+                }
+            }
+
+        } else {
+            listview.setVisibility(View.GONE);
+            TextView text = (TextView) view.findViewById(R.id.text);
+            Button more = (Button)view.findViewById(R.id.more);
+            text.setVisibility(View.VISIBLE);
+            text.setText("No Music");
+            more.setVisibility(View.INVISIBLE);
+        }
+
+
+    }
+
+    class AscendingString implements Comparator<String> {
+        @Override
+        public int compare(String a, String b) {
+            return b.compareTo(a);
+        }
+    }
+
+    private DataVO parseData(String data) {
+        ArrayList<String> array = new ArrayList<>();
+        StringTokenizer tokens = new StringTokenizer( data, "^" );
+        for( int x = 1; tokens.hasMoreElements(); x++ ){
+            array.add(tokens.nextToken());
+        }
+
+        return new DataVO(array.get(0), array.get(1), array.get(2), array.get(3));
     }
 }

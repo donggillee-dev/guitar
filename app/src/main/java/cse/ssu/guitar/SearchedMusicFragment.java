@@ -3,6 +3,7 @@ package cse.ssu.guitar;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,13 +13,28 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import VO.DataVO;
 
 public class SearchedMusicFragment extends Fragment {
     public static SearchedMusicFragment newInstance() {
         return new SearchedMusicFragment();
     }
+    private ListView list;
+    private ListViewAdapter adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -26,14 +42,12 @@ public class SearchedMusicFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_searched_music, container, false);
 
-        ListView list;
-        ListViewAdapter adapter;
-
         adapter = new ListViewAdapter();
         list = (ListView)view.findViewById(R.id.searched_list);
         list.setAdapter(adapter);
 
 
+        createList();
         //임의로 데이터 삽입함
         //디비에서 데이터 가져와서 화면에 뿌려줘야함
         for(int i = 0; i < 15; i++) {
@@ -68,6 +82,89 @@ public class SearchedMusicFragment extends Fragment {
 
 
         return view;
+    }
+
+    private void createList() {
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+        String title;
+        String artist;
+        // DataVO dataVO = null;
+        String realPath = path;
+        List<String> filesNameList = new ArrayList<>();
+
+
+        if (files.length != 0) {
+
+            for (int i = 0; i < files.length; i++) {
+                filesNameList.add(files[i].getName());
+            }
+
+            Collections.sort(filesNameList, new AscendingString());
+            DataVO dataVO = null;
+            if (files.length >= 3) {
+                for (int i = 0; i < 3; i++) {
+                    path = path + "/" + filesNameList.get(i).subSequence(0, 12);
+
+                    try {
+                        FileInputStream fis = new FileInputStream(path);
+                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                        String result = "", temp = "";
+                        while ((temp = bufferReader.readLine()) != null) {
+                            result += temp;
+                        }
+                        Log.v(null, "" + result);
+                        dataVO = parseData(result);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                            dataVO.getTitle(), dataVO.getArtist());
+                }
+            } else {
+                for (int i = 0; i < files.length; i++) {
+                    path = path + "/" + filesNameList.get(i);
+
+                    try {
+                        FileInputStream fis = new FileInputStream(path);
+                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                        String result = "", temp = "";
+                        while ((temp = bufferReader.readLine()) != null) {
+                            result += temp;
+                        }
+                        Log.v("debug", "" + result);
+                        dataVO = parseData(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp), dataVO.getTitle(), dataVO.getArtist());
+                }
+            }
+
+        }
+    }
+
+    class AscendingString implements Comparator<String> {
+        @Override
+        public int compare(String a, String b) {
+            return b.compareTo(a);
+        }
+    }
+
+    private DataVO parseData(String data) {
+        ArrayList<String> array = new ArrayList<>();
+        StringTokenizer tokens = new StringTokenizer( data, "^" );
+        for( int x = 1; tokens.hasMoreElements(); x++ ){
+            array.add(tokens.nextToken());
+        }
+
+        return new DataVO(array.get(0), array.get(1), array.get(2), array.get(3));
     }
 
     private void replaceFragment(Fragment fragment) {
