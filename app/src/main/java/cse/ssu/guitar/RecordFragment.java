@@ -1,6 +1,7 @@
 package cse.ssu.guitar;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -16,7 +17,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,12 +65,9 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
     final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
 
-    private String filename;
-    // MediaPlayer 클래스에 재생에 관련된 메서드와 멤버변수가 저장어되있다.
-    private MediaPlayer player;
-    // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
-    private MediaRecorder recorder;
 
+    private ImageView loader;
+    private Animation animation;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.record_fragment, container, false);
         path = Environment.getExternalStorageDirectory().toString()
@@ -103,9 +104,8 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             this.mClient.startPreRecord(3000); //start prerecord, you can call "this.mClient.stopPreRecord()" to stop prerecord.
         }
 
-
+        loader = (ImageView)view.findViewById(R.id.loader);
         listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
-
 
         int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO);
 
@@ -127,21 +127,23 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             @Override
             public void onClick(View view) {
                 if (listenBtn.isChecked() == true) {
-                    if (recorder != null) {
-                        recorder.stop();
-                        recorder.release();
-                        recorder = null;
-                    }
+
 
                     // 실험 결과 왠만하면 아래 recorder 객체의 속성을 지정하는 순서는 이대로 하는게 좋다 위치를 바꿨을때 에러가 났었음
                     // 녹음 시작을 위해  MediaRecorder 객체  recorder를 생성한다.
-
-
+                    animation = AnimationUtils.loadAnimation(getActivity(),R.anim.rotate);
+                    loader.startAnimation(animation);
                     start();
 
                 } else {
-                    if (recorder == null)
-                        return;
+                    Log.v("debug", "hello");
+
+
+                    //loader.setVisibility(View.INVISIBLE);
+
+
+                    loader.clearAnimation();
+                    animation.setAnimationListener(null);
 
                     stop();
                     Toast.makeText(getActivity(),"녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();

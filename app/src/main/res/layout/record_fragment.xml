@@ -26,5 +26,13 @@
         android:textOff=""
         android:textOn="" />
 
+    <ImageView
+        android:id="@+id/loader"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_below="@+id/startListen"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/load"/>
 
 </RelativeLayout>
