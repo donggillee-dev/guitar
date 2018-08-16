@@ -160,18 +160,20 @@ public class LyricsFragment extends Fragment {
 
 
             try {
-                Document doc = Jsoup.connect(melonUrl).get();
-                Elements lyricsElement = doc.select("div.wrap_lyric");
-                lyrics = lyricsElement.text();
-                Elements imgElement = doc.select("a.image_typeAll img");
-                String imgPath = imgElement.attr("src");
-                imgUrl = new URL(imgPath);
-                conn = (HttpURLConnection)imgUrl.openConnection();
-                conn.setDoInput(true);
-                conn.connect();
+                if(melonUrl != null) {
+                    Document doc = Jsoup.connect(melonUrl).get();
+                    Elements lyricsElement = doc.select("div.wrap_lyric");
+                    lyrics = lyricsElement.text();
+                    Elements imgElement = doc.select("a.image_typeAll img");
+                    String imgPath = imgElement.attr("src");
+                    imgUrl = new URL(imgPath);
+                    conn = (HttpURLConnection) imgUrl.openConnection();
+                    conn.setDoInput(true);
+                    conn.connect();
 
-                InputStream is = conn.getInputStream();
-                bitmap = BitmapFactory.decodeStream(is);
+                    InputStream is = conn.getInputStream();
+                    bitmap = BitmapFactory.decodeStream(is);
+                }
 
 
             } catch (IOException e) {
@@ -191,7 +193,12 @@ public class LyricsFragment extends Fragment {
                 drawable = new BitmapDrawable(getResources(), bitmap);
                 layout.setBackground(drawable);
             }
-            lyrics_text.setText(lyrics);
+            if(lyrics != null)
+                lyrics_text.setText(lyrics);
+            else {
+                lyrics_text.setText("가사가 존재하지 않습니다.");
+            }
+
         }
     }
 

@@ -147,7 +147,12 @@ public class HomeFragment extends Fragment {
     private void addlist() {
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
         File directory = new File(path);
+        if(!directory.exists()){
+            directory.mkdirs();
+        }
+
         File[] files = directory.listFiles();
+
 
 
         List<String> filesNameList = new ArrayList<>();

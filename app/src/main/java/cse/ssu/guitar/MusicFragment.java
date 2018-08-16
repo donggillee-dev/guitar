@@ -219,16 +219,18 @@ public class MusicFragment extends Fragment {
 
 
             try {
-                Document doc = Jsoup.connect(melonUrl).get();
-                Elements imgElement = doc.select("a.image_typeAll img");
-                String imgPath = imgElement.attr("src");
-                imgUrl = new URL(imgPath);
-                conn = (HttpURLConnection)imgUrl.openConnection();
-                conn.setDoInput(true);
-                conn.connect();
+                if(melonUrl != null) {
+                    Document doc = Jsoup.connect(melonUrl).get();
+                    Elements imgElement = doc.select("a.image_typeAll img");
+                    String imgPath = imgElement.attr("src");
+                    imgUrl = new URL(imgPath);
+                    conn = (HttpURLConnection) imgUrl.openConnection();
+                    conn.setDoInput(true);
+                    conn.connect();
 
-                InputStream is = conn.getInputStream();
-                bitmap = BitmapFactory.decodeStream(is);
+                    InputStream is = conn.getInputStream();
+                    bitmap = BitmapFactory.decodeStream(is);
+                }
 
 
             } catch (IOException e) {
