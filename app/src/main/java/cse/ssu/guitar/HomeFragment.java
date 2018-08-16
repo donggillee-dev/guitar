@@ -2,36 +2,35 @@ package cse.ssu.guitar;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ClipData;
-import android.content.Intent;
-import android.graphics.Color;
-import android.media.Image;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.Nullable;
-import android.support.design.internal.BottomNavigationItemView;
 import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import Network.Get;
 import VO.DataVO;
 
 /**
@@ -149,7 +149,7 @@ public class HomeFragment extends Fragment {
         File directory = new File(path);
         File[] files = directory.listFiles();
 
-        String realPath = path;
+
         List<String> filesNameList = new ArrayList<>();
 
 
@@ -161,9 +161,9 @@ public class HomeFragment extends Fragment {
 
             Collections.sort(filesNameList, new AscendingString());
             DataVO dataVO = null;
-            if (files.length >= 3) {
-                for (int i = 0; i < 3; i++) {
-                    realPath = path + "/"+filesNameList.get(i).subSequence(0, 12);
+            if (files.length >= 5) {
+                for (int i = 0; i < 5; i++) {
+                    String realPath = path + "/"+filesNameList.get(i);
 
                     try {
                         FileInputStream fis = new FileInputStream(realPath);
@@ -185,7 +185,7 @@ public class HomeFragment extends Fragment {
                 }
             } else {
                 for (int i = 0; i < files.length; i++) {
-                    realPath = path + "/"+filesNameList.get(i);
+                    String realPath = path + "/"+filesNameList.get(i);
 
                     try {
                         FileInputStream fis = new FileInputStream(realPath);
@@ -210,8 +210,9 @@ public class HomeFragment extends Fragment {
             TextView text = (TextView) view.findViewById(R.id.text);
             Button more = (Button)view.findViewById(R.id.more);
             text.setVisibility(View.VISIBLE);
-            text.setText("No Music");
             more.setVisibility(View.INVISIBLE);
+
+
         }
 
 
@@ -233,4 +234,6 @@ public class HomeFragment extends Fragment {
 
         return new DataVO(array.get(0), array.get(1), array.get(2), array.get(3));
     }
+
+
 }

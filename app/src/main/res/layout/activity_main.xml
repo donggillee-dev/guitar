@@ -34,7 +34,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="?android:attr/windowBackground"
+        android:background="@color/navigation"
+        app:itemIconTint="@drawable/bottom_navigation_check"
+        app:itemTextColor="@drawable/bottom_navigation_check"
         app:menu="@menu/navigation" />
 
 </LinearLayout>

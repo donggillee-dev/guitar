@@ -1,8 +1,14 @@
 package cse.ssu.guitar;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,15 +26,27 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.w3c.dom.Text;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import Network.Get;
 import VO.AlbumVO;
 import VO.ArtistVO;
 import VO.GenreVO;
 import VO.MusicVO;
 
 public class MusicFragment extends Fragment {
-    View view;
+    private View view;
+    private String name;
+    private String artist;
+    private LinearLayout layout;
 
     public static MusicFragment newInstance() {
         return new MusicFragment();
@@ -42,7 +61,7 @@ public class MusicFragment extends Fragment {
         TextView artist_text = (TextView)view.findViewById(R.id.artist);
         Button music_button, lyrics_button, similar_button;
         Boolean key;
-        String name, artist;
+        layout = (LinearLayout)view.findViewById(R.id.musiclayout);
 
         key = getArguments().getBoolean("key");
         if(key == false) {
@@ -92,7 +111,9 @@ public class MusicFragment extends Fragment {
 
         music_button = (Button)view.findViewById(R.id.music);
         lyrics_button = (Button)view.findViewById(R.id.lyrics);
-        similar_button = (Button)view.findViewById(R.id.similar);
+
+        MelonCommunication communication = new MelonCommunication();
+        communication.execute();
 
         music_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,18 +137,6 @@ public class MusicFragment extends Fragment {
             }
         });
 
-        similar_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Bundle bundle = makeBundle();
-
-                Fragment fragment = MusicFragment.newInstance();
-                fragment.setArguments(bundle);
-                //replaceFragment(fragment);
-                Log.v("debug", "미구현 : 제일 마지막에 구현");
-
-            }
-        });
 
         return view;
     }
@@ -156,6 +165,89 @@ public class MusicFragment extends Fragment {
     //디비에 찾은 음악 정보를 저장하는 함수
     private void saveData(MusicVO musicVO) {
 
+    }
+
+    private class MelonCommunication extends AsyncTask<Void, Void, Void> {
+        private String url;
+        private String query;
+        private String title;
+        private Get get;
+        private String id;
+        private String melonUrl;
+        private URL imgUrl;
+        private HttpURLConnection conn;
+        private Bitmap bitmap;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            url = "https://www.melon.com/search/keyword/index.json?";
+            query = "jscallback=jQuery19102187322591402996_1534318713156";
+            title = "&query="+name;
+            get = new Get(url+query+title);
+            String returnString = null;
+            try {
+                returnString = get.run(get.getUrl());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            int length = returnString.length();
+            int start = query.length() - 10;
+            int end = 2;
+            String result = returnString.substring(start, length - end);
+            try {
+//                JSONObject tmp = new JSONObject(result);
+//                JSONArray array = new JSONArray(tmp.getString("SONGCONTENTS"));
+//                for(int j = 0; j < array.length(); j++) {
+//                    JSONObject object = array.getJSONObject(j);
+//                    if(object.getString("ARTISTNAME").contains(artist)) {
+//                        id = object.getString("SONGID");
+//                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+//                        Log.v("melonURL", melonUrl+"");
+//                        break;
+//                    }
+//                }
+
+                JSONObject tmp = new JSONObject(result);
+                JSONArray array = new JSONArray(tmp.getString("SONGCONTENTS"));
+                JSONObject object = array.getJSONObject(0);
+                id = object.getString("SONGID");
+                melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+            try {
+                Document doc = Jsoup.connect(melonUrl).get();
+                Elements imgElement = doc.select("a.image_typeAll img");
+                String imgPath = imgElement.attr("src");
+                imgUrl = new URL(imgPath);
+                conn = (HttpURLConnection)imgUrl.openConnection();
+                conn.setDoInput(true);
+                conn.connect();
+
+                InputStream is = conn.getInputStream();
+                bitmap = BitmapFactory.decodeStream(is);
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            BitmapDrawable drawable;
+            if(bitmap != null) {
+                drawable = new BitmapDrawable(getResources(), bitmap);
+                layout.setBackground(drawable);
+            }
+        }
     }
 
 }

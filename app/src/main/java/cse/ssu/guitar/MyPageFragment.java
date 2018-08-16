@@ -16,13 +16,19 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.StringTokenizer;
+
+import VO.DataVO;
 
 /**
  * Created by 성민우 on 2018-08-01.
@@ -34,7 +40,7 @@ public class MyPageFragment extends Fragment {
 
     private ListView music, sheet;
     private ListViewAdapter music_adapter, sheet_adapter;
-    private Button music_more, sheet_more;
+    private TextView music_more, sheet_more;
     private View view;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.mypage_fragment, container, false);
@@ -46,8 +52,8 @@ public class MyPageFragment extends Fragment {
         music = (ListView) view.findViewById(R.id.curSearch);
         sheet = (ListView) view.findViewById(R.id.musicSheet);
 
-        music_more = (Button) view.findViewById(R.id.more_music);
-        sheet_more = (Button) view.findViewById(R.id.more_sheet);
+        music_more = (TextView) view.findViewById(R.id.more_music);
+        sheet_more = (TextView) view.findViewById(R.id.more_sheet);
 
         music.setAdapter(music_adapter);
         sheet.setAdapter(sheet_adapter);
@@ -179,7 +185,6 @@ public class MyPageFragment extends Fragment {
             sheet.setVisibility(View.GONE);
             TextView text = (TextView) view.findViewById(R.id.sheet_text);
             text.setVisibility(View.VISIBLE);
-            text.setText("No Music Sheet");
             sheet_more.setVisibility(View.INVISIBLE);
         }
 
@@ -189,7 +194,7 @@ public class MyPageFragment extends Fragment {
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
         File directory = new File(path);
         File[] files = directory.listFiles();
-
+        DataVO dataVO = null;
         List<String> filesNameList = new ArrayList<>();
 
 
@@ -204,19 +209,42 @@ public class MyPageFragment extends Fragment {
             Collections.sort(filesNameList, new AscendingString());
             if(files.length >= 3) {
                 for (int i = 0; i < 3; i++) {
+                    String realPath = path + "/"+filesNameList.get(i);
 
-                    String filename = filesNameList.get(i).substring(0, 12);
-                    String date = parseDate(filename);
-                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
-                            filename, date);
+                    try {
+                        FileInputStream fis = new FileInputStream(realPath);
+                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                        String result="", temp="";
+                        while( (temp = bufferReader.readLine()) != null ) {
+                            result += temp;
+                        }
+
+                        dataVO = parseData(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
                 }
             }
             else {
                 for (int i = 0; i < files.length; i++) {
-                    String filename = filesNameList.get(i).substring(0, 12);
-                    String date = parseDate(filename);
-                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
-                            filename, date);
+                    String realPath = path + "/"+filesNameList.get(i);
+
+                    try {
+                        FileInputStream fis = new FileInputStream(realPath);
+                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                        String result="", temp="";
+                        while( (temp = bufferReader.readLine()) != null ) {
+                            result += temp;
+                        }
+
+                        dataVO = parseData(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
                 }
             }
 
@@ -225,7 +253,6 @@ public class MyPageFragment extends Fragment {
             music.setVisibility(View.GONE);
             TextView text = (TextView) view.findViewById(R.id.music_text);
             text.setVisibility(View.VISIBLE);
-            text.setText("No Music List");
             music_more.setVisibility(View.INVISIBLE);
         }
 
@@ -246,5 +273,15 @@ public class MyPageFragment extends Fragment {
         public int compare(String a, String b) {
             return b.compareTo(a);
         }
+    }
+
+    private DataVO parseData(String data) {
+        ArrayList<String> array = new ArrayList<>();
+        StringTokenizer tokens = new StringTokenizer( data, "^" );
+        for( int x = 1; tokens.hasMoreElements(); x++ ){
+            array.add(tokens.nextToken());
+        }
+
+        return new DataVO(array.get(0), array.get(1), array.get(2), array.get(3));
     }
 }

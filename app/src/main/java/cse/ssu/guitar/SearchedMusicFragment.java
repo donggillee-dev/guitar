@@ -35,12 +35,14 @@ public class SearchedMusicFragment extends Fragment {
     }
     private ListView list;
     private ListViewAdapter adapter;
+    private TextView trackNum;
+    private View view;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_searched_music, container, false);
+        view = inflater.inflate(R.layout.fragment_searched_music, container, false);
 
         adapter = new ListViewAdapter();
         list = (ListView)view.findViewById(R.id.searched_list);
@@ -48,13 +50,6 @@ public class SearchedMusicFragment extends Fragment {
 
 
         createList();
-        //임의로 데이터 삽입함
-        //디비에서 데이터 가져와서 화면에 뿌려줘야함
-        for(int i = 0; i < 15; i++) {
-            adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_dashboard_black_24dp),
-                    "Music Test " + i, "Account Box Black 36dp");
-        }
-
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -96,58 +91,33 @@ public class SearchedMusicFragment extends Fragment {
 
 
         if (files.length != 0) {
-
             for (int i = 0; i < files.length; i++) {
                 filesNameList.add(files[i].getName());
             }
 
             Collections.sort(filesNameList, new AscendingString());
             DataVO dataVO = null;
-            if (files.length >= 3) {
-                for (int i = 0; i < 3; i++) {
-                    path = path + "/" + filesNameList.get(i).subSequence(0, 12);
 
-                    try {
-                        FileInputStream fis = new FileInputStream(path);
-                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-
-                        String result = "", temp = "";
-                        while ((temp = bufferReader.readLine()) != null) {
-                            result += temp;
-                        }
-                        Log.v(null, "" + result);
-                        dataVO = parseData(result);
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
+            for (int i = 0; i < files.length; i++) {
+                String fullpath = path + "/" + filesNameList.get(i);
+                try {
+                    FileInputStream fis = new FileInputStream(fullpath);
+                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+                    String result = "", temp = "";
+                    while ((temp = bufferReader.readLine()) != null) {
+                        result += temp;
                     }
-
-                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
-                            dataVO.getTitle(), dataVO.getArtist());
+                    Log.v("debug", "" + result);
+                    dataVO = parseData(result);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else {
-                for (int i = 0; i < files.length; i++) {
-                    path = path + "/" + filesNameList.get(i);
-
-                    try {
-                        FileInputStream fis = new FileInputStream(path);
-                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-
-                        String result = "", temp = "";
-                        while ((temp = bufferReader.readLine()) != null) {
-                            result += temp;
-                        }
-                        Log.v("debug", "" + result);
-                        dataVO = parseData(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp), dataVO.getTitle(), dataVO.getArtist());
-                }
+                adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp), dataVO.getTitle(), dataVO.getArtist());
             }
-
         }
+
+        trackNum = (TextView)view.findViewById(R.id.number);
+        trackNum.setText(files.length + " Track");
     }
 
     class AscendingString implements Comparator<String> {

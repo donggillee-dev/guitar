@@ -1,7 +1,14 @@
 package cse.ssu.guitar;
 
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -10,14 +17,34 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import Network.Get;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class LyricsFragment extends Fragment {
-    View view;
+    private View view;
+    private TextView name_text;
+    private TextView artist_text;
+    private TextView lyrics_text;
+    private String name;
+    private String artist;
 
     public static LyricsFragment newInstance() {
         return new LyricsFragment();
@@ -28,13 +55,11 @@ public class LyricsFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_lyrics, container, false);
-        TextView name_text = (TextView)view.findViewById(R.id.name);
-        TextView artist_text = (TextView)view.findViewById(R.id.artist);
-        TextView lyrics_text = (TextView)view.findViewById(R.id.lyrics_text);
+        name_text = (TextView)view.findViewById(R.id.name);
+        artist_text = (TextView)view.findViewById(R.id.artist);
+        lyrics_text = (TextView)view.findViewById(R.id.lyrics_text);
 
         Button music_button, lyrics_button, similar_button;
-
-        String name, artist, lyrics;
 
         name = getArguments().getString("name");
         artist = getArguments().getString("artist");
@@ -42,32 +67,12 @@ public class LyricsFragment extends Fragment {
         name_text.setText(name);
         artist_text.setText(artist);
 
-        //임의 가사 설정
-        lyrics = "1. 동해물과 백두산이 마르고 닳도록 \n" +
-                "하느님이 보우하사 우리나라 만세\n" +
-                "무궁화 삼천리 화려 강산\n" +
-                "대한 사람 대한으로 길이 보전하세\n" +
-                "\n" +
-                "2. 남산 위에 저 소나무 철갑을 두른 듯 \n" +
-                "바람 서리 불변함은 우리 기상일세\n" +
-                "무궁화 삼천리 화려 강산 \n" +
-                "대한 사람 대한으로 길이 보전하세\n" +
-                "\n" +
-                "3. 가을 하늘 공활한데 높고 구름 없이 \n" +
-                "밝은 달은 우리 가슴 일편단심일세\n" +
-                "무궁화 삼천리 화려 강산\n" +
-                "대한 사람 대한으로 길이 보전하세\n" +
-                "\n" +
-                "4. 이 기상과 이 맘으로 충성을 다하여 \n" +
-                "괴로우나 즐거우나 나라 사랑하세\n" +
-                "무궁화 삼천리 화려 강산\n" +
-                "대한 사람 대한으로 길이 보전하세";
 
-        lyrics_text.setText(lyrics);
+        MelonCommunication communication = new MelonCommunication();
+        communication.execute();
 
         music_button = (Button)view.findViewById(R.id.music);
         lyrics_button = (Button)view.findViewById(R.id.lyrics);
-        similar_button = (Button)view.findViewById(R.id.similar);
 
         music_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,20 +95,6 @@ public class LyricsFragment extends Fragment {
                 replaceFragment(fragment);
             }
         });
-
-        similar_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Bundle bundle = makeBundle();
-
-                Fragment fragment = MusicFragment.newInstance();
-                fragment.setArguments(bundle);
-                //replaceFragment(fragment);
-
-                Log.v("debug", "미구현 : 제일 마지막에 구현");
-            }
-        });
-
 
         return view;
     }
@@ -128,4 +119,80 @@ public class LyricsFragment extends Fragment {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
+
+    private class MelonCommunication extends AsyncTask<Void, Void, Void> {
+        private String url;
+        private String query;
+        private String title;
+        private Get get;
+        private String id;
+        private String melonUrl;
+        private String lyrics;
+        private URL imgUrl;
+        private HttpURLConnection conn;
+        private Bitmap bitmap;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            url = "https://www.melon.com/search/keyword/index.json?";
+            query = "jscallback=jQuery19102187322591402996_1534318713156";
+            title = "&query="+name;
+            get = new Get(url+query+title);
+            String returnString = null;
+            try {
+                returnString = get.run(get.getUrl());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            int length = returnString.length();
+            int start = query.length() - 10;
+            int end = 2;
+            String result = returnString.substring(start, length - end);
+            try {
+                JSONObject tmp = new JSONObject(result);
+                JSONArray array = new JSONArray(tmp.getString("SONGCONTENTS"));
+                JSONObject object = array.getJSONObject(0);
+                id = object.getString("SONGID");
+                melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+            try {
+                Document doc = Jsoup.connect(melonUrl).get();
+                Elements lyricsElement = doc.select("div.wrap_lyric");
+                lyrics = lyricsElement.text();
+                Elements imgElement = doc.select("a.image_typeAll img");
+                String imgPath = imgElement.attr("src");
+                imgUrl = new URL(imgPath);
+                conn = (HttpURLConnection)imgUrl.openConnection();
+                conn.setDoInput(true);
+                conn.connect();
+
+                InputStream is = conn.getInputStream();
+                bitmap = BitmapFactory.decodeStream(is);
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            BitmapDrawable drawable;
+            LinearLayout layout = (LinearLayout)view.findViewById(R.id.lyricslayout);
+            if(bitmap != null) {
+                drawable = new BitmapDrawable(getResources(), bitmap);
+                layout.setBackground(drawable);
+            }
+            lyrics_text.setText(lyrics);
+        }
+    }
+
 }

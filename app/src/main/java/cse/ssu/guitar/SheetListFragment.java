@@ -30,12 +30,14 @@ public class SheetListFragment extends Fragment {
 
     private ListView list;
     private ListViewAdapter adapter;
+    private View view;
+    private TextView trackNum;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_sheet_list, container, false);
+        view = inflater.inflate(R.layout.fragment_sheet_list, container, false);
 
 
         adapter = new ListViewAdapter();
@@ -107,6 +109,8 @@ public class SheetListFragment extends Fragment {
                     filename , date);
         }
 
+        trackNum = (TextView)view.findViewById(R.id.number);
+        trackNum.setText(files.length - 1 + " Track");
     }
 
     public String parseDate(String filename) {
