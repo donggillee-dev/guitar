@@ -98,8 +98,11 @@ public class MusicFragment extends Fragment {
 
                 Log.v("final debug", musicVO.toString());
 
-                name_text.setText(musicVO.getTitle());
-                artist_text.setText(musicVO.getArtist().getName());
+                name = musicVO.getTitle();
+                artist = musicVO.getArtist().getName();
+                name_text.setText(name);
+                artist_text.setText(artist);
+
 
                 saveData(musicVO);
 
