@@ -171,53 +171,95 @@ public class MusicFragment extends Fragment {
     }
 
     private class MelonCommunication extends AsyncTask<Void, Void, Void> {
-        private String frontUrl;
-        private String middleUrl;
-        private String endUrl;
         private String url;
+        private String query;
+        private String title;
+        private Get get;
+        private String id;
         private String melonUrl;
         private URL imgUrl;
         private HttpURLConnection conn;
         private Bitmap bitmap;
         private boolean check;
 
-
         @Override
         protected Void doInBackground(Void... voids) {
-            frontUrl = "https://www.melon.com/search/song/index.htm?q=";
-            middleUrl = "&section=song&searchGnbYn=Y&kkoSpl=Y&kkoDpType=&ipath=srch_form#params%5Bq%5D=";
-            endUrl = "&params%5Bsort%5D=hit&params%5Bsection%5D=song&params%5BsectionId%5D=&params%5BgenreDir%5D=&params%5BsubLinkOrText%5D=L&po=pageObj&startIndex=1";
-            name = name.replace(" ", "");
-            url = frontUrl + name + middleUrl + name + endUrl;
+            url = "https://www.melon.com/search/keyword/index.json?";
+            query = "jscallback=jQuery19102187322591402996_1534318713156";
+            title = "&query="+name;
+            get = new Get(url+query+title);
+            String returnString = null;
             try {
-                Document doc = Jsoup.connect(url).get();
-                Log.v("url", url+"");
-                Elements elements = doc.select("table tbody").select(".fc_mgray");
-                check = false;
-                for(Element element : elements) {
-                    String compareArtist = element.select("a").text();
+                returnString = get.run(get.getUrl());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            int length = returnString.length();
+            int start = query.length() - 10;
+            int end = 2;
+            String result = returnString.substring(start, length - end);
+            try {
+                JSONObject tmp = new JSONObject(result);
+                JSONArray array = null;
+                if(!tmp.has("ERROR"))
+                    array = new JSONArray(tmp.getString("SONGCONTENTS"));
 
-                    Log.v("@@@@@@@@", compareArtist+"");
-                    if(compareArtist.contains(artist) || artist.contains(compareArtist)) {
-                        String ref = element.select("a").attr("href");
-                        Log.v("^^^^^", ref+"");
-                        String[] tmpArray = ref.split(",");
-                        String id = tmpArray[tmpArray.length - 1];
-                        id = id.substring(1, id.length()-3);
-                        Log.v("*******", id+"");
-                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
-                        check = true;
-                        break;
+                if(array != null) {
+                    check = false;
+                    for(int i = 0; i < array.length(); i++) {
+                        JSONObject object = array.getJSONObject(i);
+                        Log.v("****"+i, object.toString());
+                        String compareName = object.getString("ARTISTNAME");
+                        if(compareName.contains(artist)) {
+                            check = true;
+                            id = object.getString("SONGID");
+                            melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                            break;
+                        }
                     }
                 }
                 if(check == false) {
+                    String frontUrl = "https://www.melon.com/search/song/index.htm?q=";
+                    String middleUrl = "&section=&searchGnbYn=Y&kkoSpl=Y&kkoDpType=&linkOrText=T&ipath=srch_form#params%5Bq%5D=";
+                    String middleUrl2 = "&params%5Bsort%5D=weight&params%5Bsection%5D=all&params%5BsectionId%5D=&params%5BgenreDir%5D=&params%5Bsq%5D=";
+                    String endUrl = "&params%5BsubLinkOrText%5D=T&po=pageObj&startIndex=1";
 
+                    name = name.replace(" ", "");
+                    String tmpArtist = artist.replace(" ", "");
+                    url = frontUrl + name + middleUrl + name + middleUrl2 + tmpArtist + endUrl;
+                    try {
+                        Document doc = Jsoup.connect(url).get();
+                        Log.v("url", url+"");
+                        Elements elements = doc.select("table tbody").select(".fc_mgray");
+                        check = false;
+                        for(Element element : elements) {
+                            String compareArtist = element.select("a").text();
 
+                            Log.v("@@@@@@@@", compareArtist+"");
+                            if(compareArtist.contains(artist) || artist.contains(compareArtist)) {
+                                String ref = element.select("a").attr("href");
+                                Log.v("^^^^^", ref+"");
+                                String[] tmpArray = ref.split(",");
+                                id = tmpArray[tmpArray.length - 1];
+                                id = id.substring(1, id.length()-3);
+                                Log.v("*******", id+"");
+                                melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                                check = true;
+                                break;
+                            }
+                        }
+                        if(check == false) {
+                            melonUrl = null;
+                        }
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-            catch (Exception e) {
+            } catch (JSONException e) {
                 e.printStackTrace();
             }
+
 
             try {
                 if(melonUrl != null) {
@@ -233,10 +275,10 @@ public class MusicFragment extends Fragment {
                     bitmap = BitmapFactory.decodeStream(is);
                 }
 
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
 
             return null;
         }
@@ -246,16 +288,13 @@ public class MusicFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             BitmapDrawable drawable;
-            try {
-                if (bitmap != null) {
-                    drawable = new BitmapDrawable(getResources(), bitmap);
-                    layout.setBackground(drawable);
-                }
-                else {
-                    layout.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.color));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            LinearLayout layout = (LinearLayout)view.findViewById(R.id.musiclayout);
+            if(bitmap != null) {
+                drawable = new BitmapDrawable(getResources(), bitmap);
+                layout.setBackground(drawable);
+            }
+            else {
+                layout.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.color));
             }
         }
     }

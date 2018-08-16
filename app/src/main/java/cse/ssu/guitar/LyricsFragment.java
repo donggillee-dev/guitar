@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -132,6 +133,7 @@ public class LyricsFragment extends Fragment {
         private URL imgUrl;
         private HttpURLConnection conn;
         private Bitmap bitmap;
+        private boolean check;
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -156,7 +158,7 @@ public class LyricsFragment extends Fragment {
                     array = new JSONArray(tmp.getString("SONGCONTENTS"));
 
                 if(array != null) {
-                    boolean check = false;
+                    check = false;
                     for(int i = 0; i < array.length(); i++) {
                         JSONObject object = array.getJSONObject(i);
                         Log.v("****"+i, object.toString());
@@ -168,9 +170,43 @@ public class LyricsFragment extends Fragment {
                             break;
                         }
                     }
-                    if(check == false) {
-                        JSONObject object = array.getJSONObject(0);
-                        melonUrl = null;
+                }
+                if(check == false) {
+                    String frontUrl = "https://www.melon.com/search/song/index.htm?q=";
+                    String middleUrl = "&section=&searchGnbYn=Y&kkoSpl=Y&kkoDpType=&linkOrText=T&ipath=srch_form#params%5Bq%5D=";
+                    String middleUrl2 = "&params%5Bsort%5D=weight&params%5Bsection%5D=all&params%5BsectionId%5D=&params%5BgenreDir%5D=&params%5Bsq%5D=";
+                    String endUrl = "&params%5BsubLinkOrText%5D=T&po=pageObj&startIndex=1";
+
+                    name = name.replace(" ", "");
+                    String tmpArtist = artist.replace(" ", "");
+                    url = frontUrl + name + middleUrl + name + middleUrl2 + tmpArtist + endUrl;
+                    try {
+                        Document doc = Jsoup.connect(url).get();
+                        Log.v("url", url+"");
+                        Elements elements = doc.select("table tbody").select(".fc_mgray");
+                        check = false;
+                        for(Element element : elements) {
+                            String compareArtist = element.select("a").text();
+
+                            Log.v("@@@@@@@@", compareArtist+"");
+                            if(compareArtist.contains(artist) || artist.contains(compareArtist)) {
+                                String ref = element.select("a").attr("href");
+                                Log.v("^^^^^", ref+"");
+                                String[] tmpArray = ref.split(",");
+                                id = tmpArray[tmpArray.length - 1];
+                                id = id.substring(1, id.length()-3);
+                                Log.v("*******", id+"");
+                                melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                                check = true;
+                                break;
+                            }
+                        }
+                        if(check == false) {
+                            melonUrl = null;
+                        }
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             } catch (JSONException e) {
