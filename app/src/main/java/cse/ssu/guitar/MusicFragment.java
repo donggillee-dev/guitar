@@ -206,13 +206,30 @@ public class MusicFragment extends Fragment {
 //                        break;
 //                    }
 //                }
-
+                Log.v("JSON result >>> ", result+"");
                 JSONObject tmp = new JSONObject(result);
-                JSONArray array = new JSONArray(tmp.getString("SONGCONTENTS"));
+                JSONArray array = null;
+                if(!tmp.has("ERROR"))
+                    array = new JSONArray(tmp.getString("SONGCONTENTS"));
+
                 if(array != null) {
-                    JSONObject object = array.getJSONObject(0);
-                    id = object.getString("SONGID");
-                    melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                    boolean check = false;
+                    for(int i = 0; i < array.length(); i++) {
+                        JSONObject object = array.getJSONObject(i);
+                        Log.v("****"+i, object.toString());
+                        String compareName = object.getString("ARTISTNAME");
+                        if(compareName.contains(name)) {
+                            check = true;
+                            id = object.getString("SONGID");
+                            melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                            break;
+                        }
+                    }
+                    if(check == false) {
+                        JSONObject object = array.getJSONObject(0);
+                        id = object.getString("SONGID");
+                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                    }
                 }
 
             } catch (JSONException e) {
@@ -247,9 +264,13 @@ public class MusicFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             BitmapDrawable drawable;
-            if(bitmap != null) {
-                drawable = new BitmapDrawable(getResources(), bitmap);
-                layout.setBackground(drawable);
+            try {
+                if (bitmap != null) {
+                    drawable = new BitmapDrawable(getResources(), bitmap);
+                    layout.setBackground(drawable);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

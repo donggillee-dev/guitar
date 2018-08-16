@@ -150,10 +150,29 @@ public class LyricsFragment extends Fragment {
             String result = returnString.substring(start, length - end);
             try {
                 JSONObject tmp = new JSONObject(result);
-                JSONArray array = new JSONArray(tmp.getString("SONGCONTENTS"));
-                JSONObject object = array.getJSONObject(0);
-                id = object.getString("SONGID");
-                melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                JSONArray array = null;
+                if(!tmp.has("ERROR"))
+                    array = new JSONArray(tmp.getString("SONGCONTENTS"));
+
+                if(array != null) {
+                    boolean check = false;
+                    for(int i = 0; i < array.length(); i++) {
+                        JSONObject object = array.getJSONObject(i);
+                        Log.v("****"+i, object.toString());
+                        String compareName = object.getString("ARTISTNAME");
+                        if(compareName.contains(name)) {
+                            check = true;
+                            id = object.getString("SONGID");
+                            melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                            break;
+                        }
+                    }
+                    if(check == false) {
+                        JSONObject object = array.getJSONObject(0);
+                        id = object.getString("SONGID");
+                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                    }
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
