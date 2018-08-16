@@ -157,9 +157,14 @@ public class HomeFragment extends Fragment {
 
         List<String> filesNameList = new ArrayList<>();
 
-
-        if (files.length != 0) {
-
+        if(files == null || files.length == 0) {
+            listview.setVisibility(View.GONE);
+            TextView text = (TextView) view.findViewById(R.id.text);
+            Button more = (Button)view.findViewById(R.id.more);
+            text.setVisibility(View.VISIBLE);
+            more.setVisibility(View.INVISIBLE);
+        }
+        else {
             for (int i = 0; i < files.length; i++) {
                 filesNameList.add(files[i].getName());
             }
@@ -210,17 +215,7 @@ public class HomeFragment extends Fragment {
                 }
             }
 
-        } else {
-            listview.setVisibility(View.GONE);
-            TextView text = (TextView) view.findViewById(R.id.text);
-            Button more = (Button)view.findViewById(R.id.more);
-            text.setVisibility(View.VISIBLE);
-            more.setVisibility(View.INVISIBLE);
-
-
         }
-
-
     }
 
     class AscendingString implements Comparator<String> {

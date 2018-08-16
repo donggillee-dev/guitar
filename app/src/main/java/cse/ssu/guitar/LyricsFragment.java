@@ -162,7 +162,7 @@ public class LyricsFragment extends Fragment {
             try {
                 if(melonUrl != null) {
                     Document doc = Jsoup.connect(melonUrl).get();
-                    Elements lyricsElement = doc.select("div.wrap_lyric");
+                    Elements lyricsElement = doc.select("div.lyric");
                     lyrics = lyricsElement.text();
                     Elements imgElement = doc.select("a.image_typeAll img");
                     String imgPath = imgElement.attr("src");

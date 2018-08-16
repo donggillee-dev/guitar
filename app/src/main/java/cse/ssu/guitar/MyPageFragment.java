@@ -153,9 +153,13 @@ public class MyPageFragment extends Fragment {
 
         List<String> filesNameList = new ArrayList<>();
 
-
-
-        if(files.length > 1) {
+        if(files == null || files.length<= 1) {
+            sheet.setVisibility(View.GONE);
+            TextView text = (TextView) view.findViewById(R.id.sheet_text);
+            text.setVisibility(View.VISIBLE);
+            sheet_more.setVisibility(View.INVISIBLE);
+        }
+        else {
             Log.v("length", ""+files.length);
             for (int i = 0; i < files.length; i++) {
                 filesNameList.add(files[i].getName());
@@ -179,15 +183,7 @@ public class MyPageFragment extends Fragment {
                             filename, date);
                 }
             }
-
         }
-        else if(files.length <= 1){
-            sheet.setVisibility(View.GONE);
-            TextView text = (TextView) view.findViewById(R.id.sheet_text);
-            text.setVisibility(View.VISIBLE);
-            sheet_more.setVisibility(View.INVISIBLE);
-        }
-
     }
 
     private void add_music_list() {
@@ -197,9 +193,13 @@ public class MyPageFragment extends Fragment {
         DataVO dataVO = null;
         List<String> filesNameList = new ArrayList<>();
 
-
-
-        if(files.length != 0) {
+        if(files == null || files.length == 0) {
+            music.setVisibility(View.GONE);
+            TextView text = (TextView) view.findViewById(R.id.music_text);
+            text.setVisibility(View.VISIBLE);
+            music_more.setVisibility(View.INVISIBLE);
+        }
+        else  {
             Log.v("length in music", ""+files.length);
             for (int i = 0; i < files.length; i++) {
                 filesNameList.add(files[i].getName());
@@ -247,15 +247,7 @@ public class MyPageFragment extends Fragment {
                     music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
                 }
             }
-
         }
-        else if(files.length == 0){
-            music.setVisibility(View.GONE);
-            TextView text = (TextView) view.findViewById(R.id.music_text);
-            text.setVisibility(View.VISIBLE);
-            music_more.setVisibility(View.INVISIBLE);
-        }
-
     }
 
     public String parseDate(String filename) {
