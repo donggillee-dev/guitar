@@ -12,6 +12,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -160,7 +161,7 @@ public class LyricsFragment extends Fragment {
                         JSONObject object = array.getJSONObject(i);
                         Log.v("****"+i, object.toString());
                         String compareName = object.getString("ARTISTNAME");
-                        if(compareName.contains(name)) {
+                        if(compareName.contains(artist)) {
                             check = true;
                             id = object.getString("SONGID");
                             melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
@@ -169,8 +170,7 @@ public class LyricsFragment extends Fragment {
                     }
                     if(check == false) {
                         JSONObject object = array.getJSONObject(0);
-                        id = object.getString("SONGID");
-                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                        melonUrl = null;
                     }
                 }
             } catch (JSONException e) {
@@ -211,6 +211,9 @@ public class LyricsFragment extends Fragment {
             if(bitmap != null) {
                 drawable = new BitmapDrawable(getResources(), bitmap);
                 layout.setBackground(drawable);
+            }
+            else {
+                layout.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.color));
             }
             if(lyrics != null)
                 lyrics_text.setText(lyrics);

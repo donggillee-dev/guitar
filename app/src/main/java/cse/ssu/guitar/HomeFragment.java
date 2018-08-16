@@ -171,8 +171,8 @@ public class HomeFragment extends Fragment {
 
             Collections.sort(filesNameList, new AscendingString());
             DataVO dataVO = null;
-            if (files.length >= 5) {
-                for (int i = 0; i < 5; i++) {
+            if (files.length >= 4) {
+                for (int i = 0; i < 4; i++) {
                     String realPath = path + "/"+filesNameList.get(i);
 
                     try {

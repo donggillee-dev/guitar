@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -218,7 +219,8 @@ public class MusicFragment extends Fragment {
                         JSONObject object = array.getJSONObject(i);
                         Log.v("****"+i, object.toString());
                         String compareName = object.getString("ARTISTNAME");
-                        if(compareName.contains(name)) {
+                        Log.v("****"+i, compareName+" VS "+artist);
+                        if(compareName.contains(artist)) {
                             check = true;
                             id = object.getString("SONGID");
                             melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
@@ -227,8 +229,7 @@ public class MusicFragment extends Fragment {
                     }
                     if(check == false) {
                         JSONObject object = array.getJSONObject(0);
-                        id = object.getString("SONGID");
-                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                        melonUrl = null;
                     }
                 }
 
@@ -251,7 +252,6 @@ public class MusicFragment extends Fragment {
                     bitmap = BitmapFactory.decodeStream(is);
                 }
 
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -268,6 +268,9 @@ public class MusicFragment extends Fragment {
                 if (bitmap != null) {
                     drawable = new BitmapDrawable(getResources(), bitmap);
                     layout.setBackground(drawable);
+                }
+                else {
+                    layout.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.color));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
