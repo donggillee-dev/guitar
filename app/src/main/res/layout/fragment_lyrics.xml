@@ -48,17 +48,21 @@
             android:text="artist"
             android:textSize="20dp"
             android:gravity="center"/>
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginRight="20dp"
-            android:layout_marginLeft="20dp">
+            android:layout_marginLeft="20dp"
+            android:layout_gravity="center"
+            android:layout_marginRight="20dp">
+
             <TextView
                 android:id="@+id/lyrics_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:textSize="45px"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:textSize="45px" />
         </ScrollView>
 
 
