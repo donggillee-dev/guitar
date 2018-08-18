@@ -142,11 +142,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     start();
 
                 } else {
-                    Log.v("debug", "hello");
-
-
                     //loader.setVisibility(View.INVISIBLE);
-
 
                     loader.clearAnimation();
                     animation.setAnimationListener(null);
@@ -213,10 +209,11 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             JSONObject tt = null;
             JSONObject j = new JSONObject(result);
             JSONObject j1 = j.getJSONObject("status");
+            Log.v("aaa",result);
             int j2 = j1.getInt("code");
             if(j2 == 0){
                 JSONObject metadata = j.getJSONObject("metadata");
-                //
+                Log.v("aaa",metadata.toString());
                 if (metadata.has("humming")) {
                     JSONArray hummings = metadata.getJSONArray("humming");
                     for(int i=0; i<hummings.length(); i++) {
@@ -265,6 +262,12 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     fragment.setArguments(bundle);
                     replaceFragment(fragment);
                 }
+            }
+            else if(j2== 1001) {
+                stop();
+                listenBtn.setChecked(false);
+                loader.clearAnimation();
+                animation.setAnimationListener(null);
             }
         } catch (JSONException e) {
             e.printStackTrace();
