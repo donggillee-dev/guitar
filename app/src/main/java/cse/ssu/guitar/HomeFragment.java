@@ -121,8 +121,11 @@ public class HomeFragment extends Fragment {
 
                 Log.v("debug", "item selected > " + name + " : " + artist);
 
-                bundle.putString("name", name);
-                bundle.putString("artist", artist);
+                DataVO data;
+                data = findData(name, artist);
+
+                Log.v("in Homefragment", data.toString());
+                bundle.putString("data", data.toString());
                 bundle.putBoolean("key", false);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
@@ -197,7 +200,7 @@ public class HomeFragment extends Fragment {
                         e.printStackTrace();
                     }
 
-                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
                             dataVO.getTitle(), dataVO.getArtist());
                 }
             } else {
@@ -218,7 +221,7 @@ public class HomeFragment extends Fragment {
                         e.printStackTrace();
                     }
 
-                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
+                    adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),dataVO.getTitle(), dataVO.getArtist());
                 }
             }
 
@@ -232,17 +235,50 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private DataVO parseData(String data) {
-        ArrayList<String> array = new ArrayList<>();
-        StringTokenizer tokens = new StringTokenizer( data, "^" );
-        for( int x = 1; tokens.hasMoreElements(); x++ ){
-            array.add(tokens.nextToken());
+    private DataVO findData(String title, String artist) {
+        DataVO resultData = null;
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
+        File directory = new File(path);
+
+        if(!directory.exists()){
+            directory.mkdirs();
         }
 
-        return new DataVO(array.get(0), array.get(1), array.get(2), array.get(3));
+        File[] files = directory.listFiles();
+        List<String> filesNameList = new ArrayList<>();
+        for (int i = 0; i < files.length; i++)
+            filesNameList.add(files[i].getName());
+        for(int i = 0; i < files.length; i++)
+            if(filesNameList.get(i).contains(title) && filesNameList.get(i).contains(artist)) {
+                String realPath = path + "/" + filesNameList.get(i);
+                try {
+                    FileInputStream fis = new FileInputStream(realPath);
+                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                    String result="", temp="";
+                    while( (temp = bufferReader.readLine()) != null ) {
+                        result += temp;
+                    }
+
+                    resultData = parseData(result);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        return resultData;
     }
 
+    private DataVO parseData(String data) {
+        DataVO result = null;
+        Log.v("in parseData", data+"");
+        try {
+            JSONObject object = new JSONObject(data);
+            result = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-
-
+        return result;
+    }
 }

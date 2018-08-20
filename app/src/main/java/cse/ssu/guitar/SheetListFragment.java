@@ -105,7 +105,7 @@ public class SheetListFragment extends Fragment {
 
             String filename = filesNameList.get(i).substring(0, 12);
             String date = parseDate(filename);
-            adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+            adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
                     filename , date);
         }
 

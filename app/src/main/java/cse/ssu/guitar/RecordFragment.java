@@ -2,7 +2,11 @@ package cse.ssu.guitar;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
@@ -33,10 +37,17 @@ import com.acrcloud.rec.sdk.IACRCloudListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -74,8 +85,16 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
     private ImageView loader;
     private Animation animation;
+
+    private String title;
+    private String artist;
+    private String image;
+    private String lyric;
+    private DataVO dataVO;
+    private View view;
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.record_fragment, container, false);
+        view = inflater.inflate(R.layout.record_fragment, container, false);
         path = Environment.getExternalStorageDirectory().toString()
                 + "/acrcloud/model";
 
@@ -209,11 +228,11 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             JSONObject tt = null;
             JSONObject j = new JSONObject(result);
             JSONObject j1 = j.getJSONObject("status");
-            Log.v("aaa",result);
+            if(j1.getString("msg").contains("No"))
+                Toast.makeText(getActivity(),"음악을 찾을 수 없습니다.", Toast.LENGTH_LONG).show();
             int j2 = j1.getInt("code");
             if(j2 == 0){
                 JSONObject metadata = j.getJSONObject("metadata");
-                Log.v("aaa",metadata.toString());
                 if (metadata.has("humming")) {
                     JSONArray hummings = metadata.getJSONArray("humming");
                     for(int i=0; i<hummings.length(); i++) {
@@ -256,8 +275,10 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     listenBtn.setChecked(false);
                     Fragment fragment = MusicFragment.newInstance();
                     Bundle bundle = new Bundle();
+
                     parseData(tt.toString());
-                    bundle.putString("data", tt.toString());
+
+                    bundle.putString("data", dataVO.toString());
                     bundle.putBoolean("key", true);
                     fragment.setArguments(bundle);
                     replaceFragment(fragment);
@@ -293,7 +314,9 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private void replaceFragment(Fragment fragment) {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.content, fragment).commit();
+        fragmentTransaction.replace(R.id.content, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
     }
 
     private void parseData(String data) {
@@ -319,7 +342,12 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
             Log.v("final debug", musicVO.toString());
 
+            title = musicVO.getTitle();
+            artist = musicVO.getArtist().getName();
+
             sendData(musicVO);
+
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -327,6 +355,146 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     }
 
     private void sendData(MusicVO musicVO) {
+        Thread thread = new Thread(){
+            private String frontUrl;
+            private String endUrl;
+            private String url;
+            private String melonUrl;
+            private String lyrics;
+
+            private URL imgUrl;
+            private HttpURLConnection conn;
+            private Bitmap bitmap;
+            private boolean check;
+
+            @Override
+            public void run() {
+                frontUrl = "https://www.melon.com/search/song/index.htm?startIndex=1&pageSize=50&q=";
+                endUrl = "&sort=hit&section=all&sectionId=&genreDir=&subLinkOrText=L";
+                String tmpTitle = title.replace(" ", "");
+                url = frontUrl + tmpTitle + endUrl;
+                try {
+                    Document doc = Jsoup.connect(url).get();
+                    Log.v("url", url + "");
+                    Elements elements = doc.select("table tbody").select(".fc_mgray");
+                    check = false;
+                    for(Element element : elements) {
+                        String compareArtist = element.select("a").text();
+
+                        Log.v("Artist List > ", compareArtist+"");
+                        if(compareArtist.toLowerCase().contains(artist.toLowerCase()) || artist.toLowerCase().contains(compareArtist.toLowerCase())) {
+                            String ref = element.select("a").attr("href");
+                            Log.v("LINK : ", ref+"");
+                            String[] tmpArray = ref.split(",");
+                            String id = tmpArray[tmpArray.length - 1];
+                            id = id.substring(1, id.length()-3);
+                            Log.v("SONG ID : ", id+"");
+                            melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                            check = true;
+                            break;
+                        }
+                    }
+                    if (check == false) {
+                        if(tmpTitle.contains("(")) {
+                            int front = tmpTitle.indexOf('(');
+                            tmpTitle = tmpTitle.substring(0, front);
+                            url = frontUrl + tmpTitle + endUrl;
+                            doc = Jsoup.connect(url).get();
+                            Log.v("new url", url + "");
+                            elements = doc.select("table tbody").select(".fc_mgray");
+                            check = false;
+                            for(Element element : elements) {
+                                String compareArtist = element.select("a").text();
+
+                                Log.v("Artist List > ", compareArtist+"");
+                                if(compareArtist.toLowerCase().contains(artist.toLowerCase()) || artist.toLowerCase().contains(compareArtist.toLowerCase())) {
+                                    String ref = element.select("a").attr("href");
+                                    Log.v("LINK : ", ref+"");
+                                    String[] tmpArray = ref.split(",");
+                                    String id = tmpArray[tmpArray.length - 1];
+                                    id = id.substring(1, id.length()-3);
+                                    Log.v("SONG ID : ", id+"");
+                                    melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
+                                    check = true;
+                                    break;
+                                }
+                            }
+                            if (check == false) {
+                                melonUrl = null;
+                            }
+                        }
+                        else
+                            melonUrl = null;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+                try
+                {
+                    if (melonUrl != null) {
+                        Document doc = Jsoup.connect(melonUrl).get();
+                        Elements lyricsElement = doc.select("div.lyric");
+
+                        int pos = -1;
+                        String tmp;
+                        if(lyricsElement.first().html() != null) {
+                            lyrics = lyricsElement.first().html();
+                            pos = lyrics.indexOf("<br>");
+                            tmp = lyrics.substring(0, pos);
+                            lyrics = lyrics.substring(pos);
+                            pos = tmp.lastIndexOf('>');
+                            if (pos != -1)
+                                tmp = tmp.substring(pos + 1);
+                            lyrics = tmp + lyrics;
+                            Log.v("before replacing : ", lyrics);
+                            lyrics = lyrics.replaceAll("<br>", "\n");
+                            Elements imgElement = doc.select("a.image_typeAll img");
+                            String imgPath = imgElement.attr("src");
+                            image = imgPath;
+                            lyric = lyrics;
+                        }
+                        else {
+                            lyric = null;
+                        }
+
+                    }
+                    else {
+                        lyric = null;
+                        image = null;
+                    }
+
+
+                } catch (
+                        IOException e)
+
+                {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+
+
+        try {
+            thread.start();
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Date currentTime = new Date();
+        String date = format.format(currentTime);
+
+        dataVO = new DataVO(artist, title, date, image, lyric);
+        write(dataVO);
+
+    }
+
+    //여기서 원래 http 통신을 해야함
+    private void write(DataVO dataVO) {
         String filepath = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/log";
 
         File file = new File(filepath);
@@ -341,16 +509,15 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         String date = format_2.format(currentTime);
 
 
-        DataVO data = new DataVO(musicVO.getArtist().getName(), musicVO.getTitle(), musicVO.getAlbum().getName(), date);
-
-        File savefile = new File(filepath+"/"+title+".txt");
+        File savefile = new File(filepath+"/"+title+" "+dataVO.getTitle()+" "+dataVO.getArtist()+".txt");
         try{
             FileOutputStream fos = new FileOutputStream(savefile);
-            fos.write(data.toString().getBytes());
+            fos.write(dataVO.toString().getBytes());
             fos.close();
         } catch(IOException e){
             e.printStackTrace();
         }
+
     }
 
 }

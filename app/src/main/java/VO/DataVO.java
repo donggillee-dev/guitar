@@ -7,14 +7,16 @@ package VO;
 public class DataVO {
     private String artist;
     private String title;
-    private String album;
     private String searched_date;
+    private String image;
+    private String lyric;
 
-    public DataVO(String artist, String title, String album, String searched_date) {
+    public DataVO(String artist, String title, String searched_date, String image, String lyric) {
         this.artist = artist;
         this.title = title;
-        this.album = album;
         this.searched_date = searched_date;
+        this.image = image;
+        this.lyric = lyric;
     }
 
     public String getArtist() {
@@ -33,14 +35,6 @@ public class DataVO {
         this.title = title;
     }
 
-    public String getAlbum() {
-        return album;
-    }
-
-    public void setAlbum(String album) {
-        this.album = album;
-    }
-
     public String getSearched_date() {
         return searched_date;
     }
@@ -49,8 +43,30 @@ public class DataVO {
         this.searched_date = searched_date;
     }
 
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getLyric() {
+        return lyric;
+    }
+
+    public void setLyric(String lyric) {
+        this.lyric = lyric;
+    }
+
     @Override
     public String toString() {
-        return artist + "^" + title + "^" + album + "^" + searched_date;
+        return "{" +
+                "\"artist\":\"" + artist + "\"" +
+                ", \"title\":\"" + title + "\"" +
+                ", \"searched_date\":\"" + searched_date + "\"" +
+                ", \"image\":\"" + image + "\"" +
+                ", \"lyric\":\"" + lyric + "\"" +
+                "}";
     }
 }

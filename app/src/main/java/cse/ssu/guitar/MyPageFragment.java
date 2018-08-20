@@ -16,6 +16,9 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,9 +62,6 @@ public class MyPageFragment extends Fragment {
         sheet.setAdapter(sheet_adapter);
 
 
-        //임의로 데이터 3개씩 삽입
-
-
         //현재 날짜 구하기
         Long now = System.currentTimeMillis();
         Date date = new Date(now);
@@ -88,9 +88,12 @@ public class MyPageFragment extends Fragment {
 
                 Log.v("debug", "item selected > " + name + " : " + artist);
 
-                bundle.putBoolean("key", false);
-                bundle.putString("name", name);
-                bundle.putString("artist", artist);
+                DataVO data;
+                data = findData(name, artist);
+
+                Log.v("in Music List", data.toString());
+                bundle.putString("data", data.toString());
+                bundle.putBoolean("key", true);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
@@ -171,7 +174,7 @@ public class MyPageFragment extends Fragment {
 
                     String filename = filesNameList.get(i).substring(0, 12);
                     String date = parseDate(filename);
-                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
                             filename, date);
                 }
             }
@@ -179,7 +182,7 @@ public class MyPageFragment extends Fragment {
                 for (int i = 1; i < files.length; i++) {
                     String filename = filesNameList.get(i).substring(0, 12);
                     String date = parseDate(filename);
-                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),
+                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
                             filename, date);
                 }
             }
@@ -224,7 +227,7 @@ public class MyPageFragment extends Fragment {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
+                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),dataVO.getTitle(), dataVO.getArtist());
                 }
             }
             else {
@@ -244,7 +247,7 @@ public class MyPageFragment extends Fragment {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.ic_audiotrack_black_24dp),dataVO.getTitle(), dataVO.getArtist());
+                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),dataVO.getTitle(), dataVO.getArtist());
                 }
             }
         }
@@ -268,12 +271,49 @@ public class MyPageFragment extends Fragment {
     }
 
     private DataVO parseData(String data) {
-        ArrayList<String> array = new ArrayList<>();
-        StringTokenizer tokens = new StringTokenizer( data, "^" );
-        for( int x = 1; tokens.hasMoreElements(); x++ ){
-            array.add(tokens.nextToken());
+        DataVO result = null;
+        Log.v("in parseData", data+"");
+        try {
+            JSONObject object = new JSONObject(data);
+            result = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
-        return new DataVO(array.get(0), array.get(1), array.get(2), array.get(3));
+        return result;
+    }
+
+    private DataVO findData(String title, String artist) {
+        DataVO resultData = null;
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
+        File directory = new File(path);
+
+        if(!directory.exists()){
+            directory.mkdirs();
+        }
+
+        File[] files = directory.listFiles();
+        List<String> filesNameList = new ArrayList<>();
+        for (int i = 0; i < files.length; i++)
+            filesNameList.add(files[i].getName());
+        for(int i = 0; i < files.length; i++)
+            if(filesNameList.get(i).contains(title) && filesNameList.get(i).contains(artist)) {
+                String realPath = path + "/" + filesNameList.get(i);
+                try {
+                    FileInputStream fis = new FileInputStream(realPath);
+                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                    String result="", temp="";
+                    while( (temp = bufferReader.readLine()) != null ) {
+                        result += temp;
+                    }
+
+                    resultData = parseData(result);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        return resultData;
     }
 }

@@ -42,6 +42,7 @@ import java.net.URL;
 import Network.Get;
 import VO.AlbumVO;
 import VO.ArtistVO;
+import VO.DataVO;
 import VO.GenreVO;
 import VO.MusicVO;
 
@@ -49,8 +50,11 @@ public class MusicFragment extends Fragment {
     private View view;
     private String name;
     private String artist;
-    private RelativeLayout layout, layout1,layout2;
+    private String lyrics;
+    private String imageUrl;
+    private RelativeLayout layout, layout1, layout2;
     private TextView lyrics_text;
+    private DataVO dataVO;
 
     public static MusicFragment newInstance() {
         return new MusicFragment();
@@ -75,58 +79,33 @@ public class MusicFragment extends Fragment {
         layout2=(RelativeLayout)view.findViewById(R.id.layout2);
         lyrics_text = (TextView)view.findViewById(R.id.lyrics_text);
 
-        key = getArguments().getBoolean("key");
-        if(key == false) {
+        String tmp = getArguments().getString("data");
+        Log.v("data", tmp+"");
+        try {
+            JSONObject object = new JSONObject(tmp);
+            dataVO = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
 
-            name = getArguments().getString("name");
-            artist = getArguments().getString("artist");
+            Log.v("data >> ", dataVO.toString());
+
+            name = dataVO.getTitle();
+            artist = dataVO.getArtist();
+            lyrics = dataVO.getLyric();
+            imageUrl = dataVO.getImage();
 
             name_text.setText(name);
             artist_text.setText(artist);
-
-
             name_text1.setText(name);
-            artist_text1.setText(artist);
             artist_text1.setText("("+artist+")");
             artist_text1.setTextSize(30);
-        }
-        else {
-            String data = getArguments().getString("data");
-            Log.v("before parsing ** ", data);
-            MusicVO musicVO = new MusicVO();
-            try {
-                //필요없다고 생각한 정보들은 일단 주석처리
 
-                JSONObject object = null;
-                object = new JSONObject(data);
-                musicVO.setExternal_ids(object.getString("play_offset_ms"));
-                //musicVO.setExternal_metadata(object.getString("external_metadata"));
-                musicVO.setArtist(new ArtistVO(object.getString("artists")));
-                //장르 정보가 넘어올때가 있고 안넘어올때가 있어서 일단은 주석
-                //musicVO.setGenres(new GenreVO(object.getString("genres")));
-                musicVO.setTitle(object.getString("title"));
-                musicVO.setRelease_date(object.getString("release_date"));
-                //musicVO.setLabel(object.getString("label"));
-                musicVO.setDuration_ms(Integer.parseInt(object.getString("duration_ms")));
-                musicVO.setAlbum(new AlbumVO(object.getString("album")));
-                musicVO.setScore(Integer.parseInt(object.getString("score")));
-
-                Log.v("final debug", musicVO.toString());
-
-                name = musicVO.getTitle();
-                artist = musicVO.getArtist().getName();
-
-                name_text.setText(name);
-                artist_text.setText(artist);
-                name_text1.setText(name);
-                artist_text1.setText("("+artist+")");
-                artist_text1.setTextSize(30);
-               saveData(musicVO);
-            } catch (JSONException e) {
-                e.printStackTrace();
+            if (!lyrics.equals("null"))
+                lyrics_text.setText(lyrics);
+            else {
+                lyrics_text.setText("가사가 존재하지 않습니다.");
             }
 
-
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
         music_button = (Button)view.findViewById(R.id.music);
@@ -138,11 +117,6 @@ public class MusicFragment extends Fragment {
         music_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Bundle bundle = makeBundle();
-
-                //Fragment fragment = MusicFragment.newInstance();
-                //fragment.setArguments(bundle);
-                //replaceFragment(fragment);
                 layout1.setVisibility(View.VISIBLE);
                 layout2.setVisibility(View.INVISIBLE);
 
@@ -152,11 +126,6 @@ public class MusicFragment extends Fragment {
         lyrics_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-        //        Bundle bundle = makeBundle();
-
-          //      Fragment fragment = LyricsFragment.newInstance();
-              //  fragment.setArguments(bundle);
-            //    replaceFragment(fragment);
                 layout2.setVisibility(View.VISIBLE);
                 layout1.setVisibility(View.INVISIBLE);
 
@@ -167,111 +136,30 @@ public class MusicFragment extends Fragment {
         return view;
     }
 
-    public Bundle makeBundle() {
-        TextView name_text = (TextView)view.findViewById(R.id.name);
-        TextView artist_text = (TextView)view.findViewById(R.id.artist);
-        String name, artist;
-        Bundle bundle = new Bundle();
-
-        name = name_text.getText().toString();
-        artist = artist_text.getText().toString();
-        bundle.putString("name", name);
-        bundle.putString("artist", artist);
-
-        return bundle;
-    }
-
-
     private void replaceFragment(Fragment fragment) {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
-    //디비에 찾은 음악 정보를 저장하는 함수
-    private void saveData(MusicVO musicVO) {
-
-    }
-
     private class MelonCommunication extends AsyncTask<Void, Void, Void> {
-        private String frontUrl;
-        private String endUrl;
-        private String url;
-        private String melonUrl;
-        private String lyrics;
-
         private URL imgUrl;
         private HttpURLConnection conn;
         private Bitmap bitmap;
-        private boolean check;
-
-
         @Override
         protected Void doInBackground(Void... voids) {
-            frontUrl = "https://www.melon.com/search/song/index.htm?startIndex=1&pageSize=50&q=";
-            endUrl = "&sort=hit&section=all&sectionId=&genreDir=&subLinkOrText=L";
-            name = name.replace(" ", "");
-            url = frontUrl + name + endUrl;
-            try {
-                Document doc = Jsoup.connect(url).get();
-                Log.v("url", url + "");
-                Elements elements = doc.select("table tbody").select(".fc_mgray");
-                check = false;
-                for(Element element : elements) {
-                    String compareArtist = element.select("a").text();
-
-                    Log.v("@@@@@@@@", compareArtist+"");
-                    if(compareArtist.contains(artist) || artist.contains(compareArtist)) {
-                        String ref = element.select("a").attr("href");
-                        Log.v("^^^^^", ref+"");
-                        String[] tmpArray = ref.split(",");
-                        String id = tmpArray[tmpArray.length - 1];
-                        id = id.substring(1, id.length()-3);
-                        Log.v("*******", id+"");
-                        melonUrl = "https://www.melon.com/song/detail.htm?songId=" + id;
-                        check = true;
-                        break;
-                    }
-                }
-                if (check == false) {
-                    melonUrl = null;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-
             try
             {
-                if (melonUrl != null) {
-                    Document doc = Jsoup.connect(melonUrl).get();
-                    Elements lyricsElement = doc.select("div.lyric");
-                    int pos = -1;
-                    String tmp;
-                    lyrics = lyricsElement.first().html();
-
-                    pos = lyrics.indexOf("<br>");
-                    tmp = lyrics.substring(0, pos);
-                   lyrics = lyrics.substring(pos);
-                    pos = tmp.lastIndexOf('>');
-                    if (pos != -1)
-                        tmp = tmp.substring(pos + 1);
-                    lyrics = tmp + lyrics;
-                    Log.v("aaa", lyrics);
-                    lyrics = lyrics.replaceAll("<br>", "\n");
-
-                    Elements imgElement = doc.select("a.image_typeAll img");
-                    String imgPath = imgElement.attr("src");
-                    imgUrl = new URL(imgPath);
+                if(!imageUrl.equals("null")) {
+                    imgUrl = new URL(imageUrl);
                     conn = (HttpURLConnection) imgUrl.openConnection();
                     conn.setDoInput(true);
                     conn.connect();
-
                     InputStream is = conn.getInputStream();
                     bitmap = BitmapFactory.decodeStream(is);
                 }
-
-
+                else
+                    bitmap = null;
             } catch (
                     IOException e)
 
@@ -295,11 +183,7 @@ public class MusicFragment extends Fragment {
                 else {
                     layout.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.color));
                 }
-                if (lyrics != null)
-                    lyrics_text.setText(lyrics);
-                else {
-                    lyrics_text.setText("가사가 존재하지 않습니다.");
-                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
