@@ -28,7 +28,6 @@ import static java.lang.String.valueOf;
 public class LoginActivity extends AppCompatActivity {
     Button signUpButton;
     Button loginButton;
-    Button setNetworkButton;
     private String return_msg;
     private String sendMessage;
     private String email;
@@ -74,20 +73,6 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                // EditText로부터 입력값을 받아오는 부분
-                //myNumber = myNumberEditText.getText().toString();
-                //partnerNumber = partnerNumberEditText.getText().toString();
-
-//                // 서버에 보낼 형식에 맞춰 만드는 부분
-//                int nullSize = 50 - (email.length());
-//                for(int i=0; i<nullSize; i++)
-//                    email += " ";
-//
-//                nullSize = 12 - (password.length());
-//                for(int i=0; i<nullSize; i++)
-//                    password += " ";
-
-//                signIn();
                 Intent intent = new Intent(LoginActivity.this, SignInActivity.class);
                 startActivity(intent);
                 finish();

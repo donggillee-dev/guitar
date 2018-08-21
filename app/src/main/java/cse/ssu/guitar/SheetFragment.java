@@ -1,6 +1,7 @@
 package cse.ssu.guitar;
 
 
+import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -27,18 +28,22 @@ public class SheetFragment extends Fragment {
 
         name = getArguments().getString("name");
         date = getArguments().getString("date");
-        rl= (RelativeLayout)view.findViewById(R.id.noteLayout);
-        ImageView iv = new ImageView(getActivity());
-        iv.setImageResource(R.drawable.quarter_note);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(70,70);
+        rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
+        int i=0;
+        for(;i<13;i++) {
 
-        lp.alignWithParent=true;
-        lp.leftMargin=100;
-        lp.topMargin=50;
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(80, 80);
 
-        iv.setLayoutParams(lp);
+            ImageView iv = new ImageView(getActivity());
+            iv.setImageResource(R.drawable.eighth_note);
 
-        rl.addView(iv);
+
+            lp.alignWithParent = true;
+            lp.leftMargin = i*30+70;
+            lp.topMargin = i*10;
+            iv.setLayoutParams(lp);
+            rl.addView(iv);
+        }
         name_view.setText(name);
         date_view.setText(date);
 

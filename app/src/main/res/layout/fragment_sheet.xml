@@ -90,15 +90,6 @@
             android:layout_height="80dp"
             android:layout_below="@+id/line5"
             android:background="@drawable/sheet"/>
-
-        <ImageView
-            android:id="@+id/note"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginLeft="50dp"
-            android:layout_marginTop="25dp"
-            android:background="@drawable/quarter_note_16" />
     </RelativeLayout>
 
 

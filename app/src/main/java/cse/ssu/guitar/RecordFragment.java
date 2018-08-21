@@ -370,8 +370,9 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             @Override
             public void run() {
                 frontUrl = "https://www.melon.com/search/song/index.htm?startIndex=1&pageSize=50&q=";
-                endUrl = "&sort=hit&section=all&sectionId=&genreDir=&subLinkOrText=L";
-                String tmpTitle = title.replace(" ", "");
+                endUrl = "&sort=hit&section=all&sectionId=&genreDir=&subLinkOrText=L&sq=";
+                String tmpTitle = title.replace(" ", "%2B");
+
                 url = frontUrl + tmpTitle + endUrl;
                 try {
                     Document doc = Jsoup.connect(url).get();
@@ -381,7 +382,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     for(Element element : elements) {
                         String compareArtist = element.select("a").text();
 
-                        Log.v("Artist List > ", compareArtist+"");
+                        Log.v("Artist List > ", compareArtist+""+artist);
                         if(compareArtist.toLowerCase().contains(artist.toLowerCase()) || artist.toLowerCase().contains(compareArtist.toLowerCase())) {
                             String ref = element.select("a").attr("href");
                             Log.v("LINK : ", ref+"");
@@ -435,11 +436,11 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                 {
                     if (melonUrl != null) {
                         Document doc = Jsoup.connect(melonUrl).get();
-                        Elements lyricsElement = doc.select("div.lyric");
-
+                        Elements lyricsElement = doc.select(".lyric");
+                        Log.v("melon",melonUrl);
                         int pos = -1;
                         String tmp;
-                        if(lyricsElement.first().html() != null) {
+                        if(lyricsElement!= null) {
                             lyrics = lyricsElement.first().html();
                             pos = lyrics.indexOf("<br>");
                             tmp = lyrics.substring(0, pos);

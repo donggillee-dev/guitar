@@ -83,7 +83,8 @@ public class MusicFragment extends Fragment {
         Log.v("data", tmp+"");
         try {
             JSONObject object = new JSONObject(tmp);
-            dataVO = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
+            dataVO = new DataVO(object.getString("artist"), object.getString("title"),
+                    object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
 
             Log.v("data >> ", dataVO.toString());
 
@@ -160,8 +161,7 @@ public class MusicFragment extends Fragment {
                 }
                 else
                     bitmap = null;
-            } catch (
-                    IOException e)
+            } catch (IOException e)
 
             {
                 e.printStackTrace();

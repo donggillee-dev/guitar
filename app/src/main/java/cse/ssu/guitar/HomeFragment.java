@@ -257,7 +257,7 @@ public class HomeFragment extends Fragment {
 
                     String result="", temp="";
                     while( (temp = bufferReader.readLine()) != null ) {
-                        result += temp;
+                        result += temp+"\n";
                     }
 
                     resultData = parseData(result);
