@@ -1,14 +1,8 @@
 package cse.ssu.guitar;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
@@ -18,15 +12,11 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -45,7 +35,6 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -56,9 +45,7 @@ import VO.ArtistVO;
 import VO.DataVO;
 import VO.MusicVO;
 
-/**
- * Created by 성민우 on 2018-08-01.
- */
+
 public class RecordFragment extends Fragment implements IACRCloudListener {
     public static RecordFragment newInstance() {
         return new RecordFragment();
@@ -114,8 +101,8 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         this.mConfig.context = getActivity();
         this.mConfig.host = "identify-ap-southeast-1.acrcloud.com";
         this.mConfig.dbPath = path; // offline db path, you can change it with other path which this app can access.
-        this.mConfig.accessKey = "6b65a3f0beacac7bb9d9e60a0ce9a939";
-        this.mConfig.accessSecret = "VfKG2Y8PGSkOxl3b9So9jhHlGpaepZHxMLESypl9";
+        this.mConfig.accessKey = "3db200c217a70395880f3ecd471bea10";
+        this.mConfig.accessSecret = "CBZ1IaKhQ4pJyrTvI6g0yFWPNrq1MdCaLT9yrgD3";
         this.mConfig.protocol = ACRCloudConfig.ACRCloudNetworkProtocol.PROTOCOL_HTTP; // PROTOCOL_HTTPS
         this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_REMOTE;
         //this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_LOCAL;

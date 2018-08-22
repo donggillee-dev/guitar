@@ -1,8 +1,5 @@
 package cse.ssu.guitar;
 
-/**
- * Created by 성민우 on 2018-07-31.
- */
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.Log;

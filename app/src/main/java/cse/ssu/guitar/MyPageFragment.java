@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -29,13 +28,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import VO.DataVO;
 
-/**
- * Created by 성민우 on 2018-08-01.
- */
 public class MyPageFragment extends Fragment {
     public static MyPageFragment newInstance() {
         return new MyPageFragment();
