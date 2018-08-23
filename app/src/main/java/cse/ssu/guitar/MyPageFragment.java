@@ -88,7 +88,7 @@ public class MyPageFragment extends Fragment {
 
                 Log.v("in Music List", data.toString());
                 bundle.putString("data", data.toString());
-                bundle.putBoolean("key", true);
+                bundle.putInt("flag",3);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
@@ -122,7 +122,12 @@ public class MyPageFragment extends Fragment {
 
             @Override
             public void onClick(View v) {
-                replaceFragment(SearchedMusicFragment.newInstance());
+                Bundle bundle = new Bundle();
+                bundle.putInt("flag",2);
+                Fragment fragment = SearchedMusicFragment.newInstance();
+                // MainFragment 로 교체
+                replaceFragment(fragment);
+                fragment.setArguments(bundle);
             }
         });
 

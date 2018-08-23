@@ -1,5 +1,8 @@
 package cse.ssu.guitar;
 
+import android.app.Activity;
+import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
@@ -11,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -25,10 +29,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import VO.DataVO;
 
-public class SearchedMusicFragment extends Fragment {
+public class SearchedMusicFragment extends Fragment implements MainActivity.onKeyBackPressedListener{
     public static SearchedMusicFragment newInstance() {
         return new SearchedMusicFragment();
     }
@@ -36,7 +41,7 @@ public class SearchedMusicFragment extends Fragment {
     private ListViewAdapter adapter;
     private TextView trackNum;
     private View view;
-
+    private int flag=0;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -47,7 +52,7 @@ public class SearchedMusicFragment extends Fragment {
         list = (ListView)view.findViewById(R.id.searched_list);
         list.setAdapter(adapter);
 
-
+         flag = getArguments().getInt("flag");
         createList();
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -114,6 +119,22 @@ public class SearchedMusicFragment extends Fragment {
 
         trackNum = (TextView)view.findViewById(R.id.number);
         trackNum.setText(files.length + " Track");
+    }
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        ((MainActivity) activity).setOnKeyBackPressedListener(this);
+    }
+
+    @Override
+    public void onBack() {
+        MainActivity activity = (MainActivity)getActivity();
+        // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
+        activity.setOnKeyBackPressedListener(null);
+        if(flag==1)
+            replaceFragment(HomeFragment.newInstance());
+        else if(flag ==2){
+            replaceFragment(MyPageFragment.newInstance());
+        }
     }
 
     class AscendingString implements Comparator<String> {

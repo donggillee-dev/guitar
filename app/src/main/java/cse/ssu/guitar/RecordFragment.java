@@ -266,7 +266,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     parseData(tt.toString());
 
                     bundle.putString("data", dataVO.toString());
-                    bundle.putBoolean("key", true);
+                    bundle.putInt("flag",2);
                     fragment.setArguments(bundle);
                     replaceFragment(fragment);
                 }

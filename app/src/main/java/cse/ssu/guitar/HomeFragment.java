@@ -109,7 +109,7 @@ public class HomeFragment extends Fragment {
 
                 Log.v("in Homefragment", data.toString());
                 bundle.putString("data", data.toString());
-                bundle.putBoolean("key", false);
+                bundle.putInt("flag",1);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
@@ -123,7 +123,12 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Log.v("debug", "more");
-                replaceFragment(SearchedMusicFragment.newInstance());
+                Bundle bundle = new Bundle();
+                bundle.putInt("flag",1);
+                Fragment fragment = SearchedMusicFragment.newInstance();
+                // MainFragment 로 교체
+                replaceFragment(fragment);
+                fragment.setArguments(bundle);
             }
         });
 

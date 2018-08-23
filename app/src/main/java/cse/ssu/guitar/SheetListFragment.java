@@ -1,6 +1,7 @@
 package cse.ssu.guitar;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
@@ -23,7 +24,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-public class SheetListFragment extends Fragment {
+public class SheetListFragment extends Fragment implements MainActivity.onKeyBackPressedListener{
     public static SheetListFragment newInstance() {
         return new SheetListFragment();
     }
@@ -122,7 +123,20 @@ public class SheetListFragment extends Fragment {
         return date;
 
     }
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        ((MainActivity) activity).setOnKeyBackPressedListener(this);
+    }
 
+    @Override
+    public void onBack() {
+        MainActivity activity = (MainActivity)getActivity();
+        // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
+        activity.setOnKeyBackPressedListener(null);
+        Fragment fragment = MyPageFragment.newInstance();
+        // MainFragment 로 교체
+        replaceFragment(fragment);
+    }
     class AscendingString implements Comparator<String> {
         @Override
         public int compare(String a, String b) {
