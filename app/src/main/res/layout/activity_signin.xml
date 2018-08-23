@@ -42,10 +42,29 @@
         android:width="300dp" />
 
     <TextView
-        android:id="@+id/pwTextView"
+        android:id="@+id/idTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/nameTextView"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="80dp"
+        android:text="ID"
+        android:textSize="20dp" />
+
+    <EditText
+        android:id="@+id/idEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/idTextView"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="20dp"
+        android:width="300dp" />
+
+    <TextView
+        android:id="@+id/pwTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/idTextView"
         android:layout_marginLeft="30dp"
         android:layout_marginTop="80dp"
         android:text="Password"
@@ -68,5 +87,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"
         android:text="JOIN" />
+
+
 
 </RelativeLayout>

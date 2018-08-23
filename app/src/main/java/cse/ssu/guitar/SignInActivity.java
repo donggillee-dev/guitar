@@ -1,14 +1,20 @@
 package cse.ssu.guitar;
 
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.support.v7.app.AlertDialog;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import Network.PostRegister;
+import VO.UserVO;
 
 public class SignInActivity extends AppCompatActivity {
     Button joinButton;
@@ -17,6 +23,8 @@ public class SignInActivity extends AppCompatActivity {
     private String email;
     private String name;
     private String password;
+    private String id;
+    private UserVO user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +34,9 @@ public class SignInActivity extends AppCompatActivity {
         joinButton = (Button) findViewById(R.id.joinButton);
         final EditText emailEditText = (EditText) findViewById(R.id.emailEditText);
         final EditText pwEditText = (EditText) findViewById(R.id.pwEditText);
+        final EditText idEditText = (EditText) findViewById(R.id.idEditText);
         final EditText nameEditText = (EditText) findViewById(R.id.nameEditText);
+
 
         joinButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -35,106 +45,57 @@ public class SignInActivity extends AppCompatActivity {
                 email = emailEditText.getText().toString();
                 name = nameEditText.getText().toString();
                 password = pwEditText.getText().toString();
+                id = idEditText.getText().toString();
 
-                // 서버에 보낼 형식에 맞춰 만드는 부분
-                int nullSize = 50 - (email.length());
-                for(int i=0; i<nullSize; i++)
-                    email += " ";
+                Log.v("sign in", email + " " + name + " "+ password + " " + id);
 
-                nullSize = 11 - (name.length());
-                for(int i=0; i<nullSize; i++)
-                    name += " ";
+                user = new UserVO(name, email, id, password);
 
-                nullSize = 12 - (password.length());
-                for(int i=0; i<nullSize; i++)
-                    password += " ";
+                SigninTask task = new SigninTask();
+                task.execute();
 
-                signIn();
+
             }
         });
     }
 
-    private void signIn() {
-        // 서버에 보낼 메세지
-        sendMessage = "11" + email + password + name;
+    class SigninTask extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... voids) {
 
-        // TCP 쓰레드 생성
-        TCPClient tcpThread = new TCPClient(sendMessage);
-        Thread thread = new Thread(tcpThread);
-        thread.start();
+            PostRegister postRegister = new PostRegister();
+            String response = null;
+            try {
+                response = postRegister.post("http://54.180.30.183:3000/register", user); //http://ttac.neinsys.io:8000/signup
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        try {
-            thread.join();
-            Log.d("TCP", "try");
-        } catch (Exception e) {
-            Log.d("TCP", "error");
+            return response;
         }
-        return_msg = tcpThread.getReturnMessage();
-        Log.d("TCP", "ret" + tcpThread.getReturnMessage());
 
-        //회원가입 성공 시 연동 화면으로 넘어감
-        if ("11SUCCESS".equals(return_msg)) {
-            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-            //intent.putExtra(“text”,String.valueOf(editText.getText()));
-            startActivity(intent);
-            finish();
-        }
-        //회원가입 실패
-        else if("11FAILURE".equals(tcpThread.getReturnMessage())){
-            Log.d("TCP", "failure" + return_msg);
+        @Override
+        protected void onPostExecute(String response) {
+            super.onPostExecute(response);
+            JSONObject jObject = null;
 
-            //연동 할 것이라고 알려주는 다이얼로그
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                    SignInActivity.this);
+            {
+                try {
+                    //회원가입 성공
+                    jObject = new JSONObject(response);
+                    if (jObject.getString("status").compareTo("OK") == 0) {
+                        Toast.makeText(getApplicationContext(), "회원가입이 성공 했습니다.", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "중복된 아이디 입니다.", Toast.LENGTH_SHORT).show();
+                        this.cancel(true);
+                    }
 
-            // 제목셋팅
-            alertDialogBuilder.setTitle("회원가입 실패");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
 
-            // AlertDialog 셋팅
-            alertDialogBuilder
-                    .setMessage("이미 가입된 이메일입니다.")
-                    .setCancelable(false)
-                    .setPositiveButton("확인",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(
-                                        DialogInterface dialog, int id) {
-                                    dialog.cancel();
-                                }
-                            });
-
-            // 다이얼로그 생성
-            AlertDialog alertDialog = alertDialogBuilder.create();
-
-            // 다이얼로그 보여주기
-            alertDialog.show();
-
-        }
-        else
-        {
-            //연동 할 것이라고 알려주는 다이얼로그
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                    SignInActivity.this);
-
-            // 제목셋팅
-            alertDialogBuilder.setTitle("서버가 꺼져있음");
-
-            // AlertDialog 셋팅
-            alertDialogBuilder
-                    .setMessage("서버가 꺼져있습니다.\n문의 : 010-9350-0510")
-                    .setCancelable(false)
-                    .setPositiveButton("확인",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(
-                                        DialogInterface dialog, int id) {
-                                    dialog.cancel();
-                                }
-                            });
-
-            // 다이얼로그 생성
-            AlertDialog alertDialog = alertDialogBuilder.create();
-
-            // 다이얼로그 보여주기
-            alertDialog.show();
         }
     }
 }
