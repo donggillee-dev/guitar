@@ -1,9 +1,15 @@
 package cse.ssu.guitar;
 
 
+import android.app.Activity;
+import android.content.Context;
+import android.icu.text.AlphabeticIndex;
 import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
-public class SheetFragment extends Fragment {
+public class SheetFragment extends Fragment implements MainActivity.onKeyBackPressedListener{
     View view;
     TextView name_view, date_view;
     String name, date;
@@ -49,5 +55,25 @@ public class SheetFragment extends Fragment {
 
 
         return view;
+    }
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        ((MainActivity) activity).setOnKeyBackPressedListener(this);
+    }
+
+    @Override
+    public void onBack() {
+        MainActivity activity = (MainActivity)getActivity();
+        // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
+        activity.setOnKeyBackPressedListener(null);
+        Fragment fragment = MyPageFragment.newInstance();
+        // MainFragment 로 교체
+        replaceFragment(fragment);
+    }
+    private void replaceFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.content, fragment);
+        fragmentTransaction.commit();
     }
 }

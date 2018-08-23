@@ -1,5 +1,6 @@
 package cse.ssu.guitar;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -46,7 +47,7 @@ import VO.DataVO;
 import VO.GenreVO;
 import VO.MusicVO;
 
-public class MusicFragment extends Fragment {
+public class MusicFragment extends Fragment implements MainActivity.onKeyBackPressedListener{
     private View view;
     private String name;
     private String artist;
@@ -55,7 +56,7 @@ public class MusicFragment extends Fragment {
     private RelativeLayout layout, layout1, layout2;
     private TextView lyrics_text;
     private DataVO dataVO;
-
+    private int flag=0;
     public static MusicFragment newInstance() {
         return new MusicFragment();
     }
@@ -73,14 +74,17 @@ public class MusicFragment extends Fragment {
 
 
         Button music_button, lyrics_button;
-        Boolean key;
+
         layout = (RelativeLayout)view.findViewById(R.id.musiclayout);
         layout1=(RelativeLayout)view.findViewById(R.id.layout1);
         layout2=(RelativeLayout)view.findViewById(R.id.layout2);
         lyrics_text = (TextView)view.findViewById(R.id.lyrics_text);
 
         String tmp = getArguments().getString("data");
+        flag = getArguments().getInt("flag");
+
         Log.v("data", tmp+"");
+        Log.v("flag",String.valueOf(flag));
         try {
             JSONObject object = new JSONObject(tmp);
             dataVO = new DataVO(object.getString("artist"), object.getString("title"),
@@ -143,6 +147,22 @@ public class MusicFragment extends Fragment {
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
+    @Override
+    public void onBack() {
+        MainActivity activity = (MainActivity)getActivity();
+        // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
+        activity.setOnKeyBackPressedListener(null);
+        if(flag==1)
+            replaceFragment(HomeFragment.newInstance());
+        else if(flag==2)
+            replaceFragment(RecordFragment.newInstance());
+        else if(flag==3)
+            replaceFragment(MyPageFragment.newInstance());
+    }
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        ((MainActivity) activity).setOnKeyBackPressedListener(this);
+    }
     private class MelonCommunication extends AsyncTask<Void, Void, Void> {
         private URL imgUrl;
         private HttpURLConnection conn;
