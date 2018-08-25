@@ -56,6 +56,9 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 //Log.v("debug","clickBnt");
+                Fragment fragment = RecordFragment.newInstance();
+                Bundle bundle = new Bundle();
+                bundle.putInt("flag",1);
                 replaceFragment(RecordFragment.newInstance());
                 //누르는 경우 하단 메뉴도 함께 변경
                 menu.setSelectedItemId(R.id.navigation_dashboard);

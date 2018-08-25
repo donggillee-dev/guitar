@@ -111,6 +111,7 @@ public class MyPageFragment extends Fragment {
 
                 bundle.putString("name", name);
                 bundle.putString("date", date);
+                bundle.putInt("flag",1);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
