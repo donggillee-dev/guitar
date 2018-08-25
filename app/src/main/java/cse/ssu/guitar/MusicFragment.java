@@ -158,6 +158,8 @@ public class MusicFragment extends Fragment implements MainActivity.onKeyBackPre
             replaceFragment(RecordFragment.newInstance());
         else if(flag==3)
             replaceFragment(MyPageFragment.newInstance());
+        else if(flag==4)
+            replaceFragment(SearchedMusicFragment.newInstance());
     }
     public void onAttach(Activity activity) {
         super.onAttach(activity);

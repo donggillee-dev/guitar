@@ -33,15 +33,21 @@ import java.util.StringTokenizer;
 
 import VO.DataVO;
 
-public class SearchedMusicFragment extends Fragment implements MainActivity.onKeyBackPressedListener{
-    public static SearchedMusicFragment newInstance() {
-        return new SearchedMusicFragment();
-    }
+public class SearchedMusicFragment extends Fragment implements MainActivity.onKeyBackPressedListener {
+
     private ListView list;
     private ListViewAdapter adapter;
     private TextView trackNum;
     private View view;
-    private int flag=0;
+    private int flag = 0;
+    private static SearchedMusicFragment instance = null;
+    public static SearchedMusicFragment newInstance() {
+        if(instance == null){
+            instance = new SearchedMusicFragment();
+        }
+        return instance;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -49,10 +55,10 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         view = inflater.inflate(R.layout.fragment_searched_music, container, false);
 
         adapter = new ListViewAdapter();
-        list = (ListView)view.findViewById(R.id.searched_list);
+        list = (ListView) view.findViewById(R.id.searched_list);
         list.setAdapter(adapter);
 
-         flag = getArguments().getInt("flag");
+        flag = getArguments().getInt("flag");
         createList();
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -63,8 +69,8 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
                 Fragment fragment = MusicFragment.newInstance();
                 Bundle bundle = new Bundle();
 
-                name_view = (TextView)view.findViewById(R.id.textView1);
-                artist_view = (TextView)view.findViewById(R.id.textView2);
+                name_view = (TextView) view.findViewById(R.id.textView1);
+                artist_view = (TextView) view.findViewById(R.id.textView2);
                 name = name_view.getText().toString();
                 artist = artist_view.getText().toString();
 
@@ -76,6 +82,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
                 Log.v("in Music List", data.toString());
                 bundle.putString("data", data.toString());
                 bundle.putBoolean("key", true);
+                bundle.putInt("flag", 4);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
@@ -117,9 +124,10 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
             }
         }
 
-        trackNum = (TextView)view.findViewById(R.id.number);
+        trackNum = (TextView) view.findViewById(R.id.number);
         trackNum.setText(files.length + " Track");
     }
+
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         ((MainActivity) activity).setOnKeyBackPressedListener(this);
@@ -127,12 +135,12 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
 
     @Override
     public void onBack() {
-        MainActivity activity = (MainActivity)getActivity();
+        MainActivity activity = (MainActivity) getActivity();
         // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
         activity.setOnKeyBackPressedListener(null);
-        if(flag==1)
+        if (flag == 1)
             replaceFragment(HomeFragment.newInstance());
-        else if(flag ==2){
+        else if (flag == 2) {
             replaceFragment(MyPageFragment.newInstance());
         }
     }
@@ -146,7 +154,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
 
     private DataVO parseData(String data) {
         DataVO result = null;
-        Log.v("in parseData", data+"");
+        Log.v("in parseData", data + "");
         try {
             JSONObject object = new JSONObject(data);
             result = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
@@ -162,7 +170,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
         File directory = new File(path);
 
-        if(!directory.exists()){
+        if (!directory.exists()) {
             directory.mkdirs();
         }
 
@@ -170,15 +178,15 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         List<String> filesNameList = new ArrayList<>();
         for (int i = 0; i < files.length; i++)
             filesNameList.add(files[i].getName());
-        for(int i = 0; i < files.length; i++)
-            if(filesNameList.get(i).contains(title) && filesNameList.get(i).contains(artist)) {
+        for (int i = 0; i < files.length; i++)
+            if (filesNameList.get(i).contains(title) && filesNameList.get(i).contains(artist)) {
                 String realPath = path + "/" + filesNameList.get(i);
                 try {
                     FileInputStream fis = new FileInputStream(realPath);
                     BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
 
-                    String result="", temp="";
-                    while( (temp = bufferReader.readLine()) != null ) {
+                    String result = "", temp = "";
+                    while ((temp = bufferReader.readLine()) != null) {
                         result += temp;
                     }
 

@@ -74,6 +74,7 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
 
                 bundle.putString("name", name);
                 bundle.putString("date", date);
+                bundle.putInt("flag",2);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }

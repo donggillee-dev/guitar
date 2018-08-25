@@ -22,6 +22,7 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
     View view;
     TextView name_view, date_view;
     String name, date;
+    int flag=0;
     RelativeLayout rl;
     public static SheetFragment newInstance() {
         return new SheetFragment();
@@ -35,6 +36,7 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
         name = getArguments().getString("name");
         date = getArguments().getString("date");
         rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
+        flag = getArguments().getInt("flag");
         int i=0;
         for(;i<13;i++) {
 
@@ -66,9 +68,10 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
         MainActivity activity = (MainActivity)getActivity();
         // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
         activity.setOnKeyBackPressedListener(null);
-        Fragment fragment = MyPageFragment.newInstance();
-        // MainFragment 로 교체
-        replaceFragment(fragment);
+        if(flag==1)
+            replaceFragment(MyPageFragment.newInstance());
+        else if(flag==2)
+            replaceFragment(SheetListFragment.newInstance());
     }
     private void replaceFragment(Fragment fragment) {
         FragmentManager fragmentManager = getFragmentManager();
