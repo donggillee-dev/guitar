@@ -5,19 +5,19 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/emailTextView"
+        android:id="@+id/idTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="30dp"
         android:layout_marginTop="80dp"
-        android:text="E-mail"
+        android:text="ID"
         android:textSize="20dp" />
 
     <EditText
-        android:id="@+id/emailEditText"
+        android:id="@+id/idEditText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/emailTextView"
+        android:layout_below="@+id/idTextView"
         android:layout_marginLeft="30dp"
         android:layout_marginTop="20dp"
         android:width="300dp" />
@@ -26,7 +26,7 @@
         android:id="@+id/pwTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/emailEditText"
+        android:layout_below="@+id/idEditText"
         android:layout_marginLeft="30dp"
         android:layout_marginTop="80dp"
         android:text="Password"

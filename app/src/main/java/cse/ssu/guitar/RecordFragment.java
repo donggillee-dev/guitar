@@ -1,10 +1,14 @@
 package cse.ssu.guitar;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -40,6 +44,8 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import Network.PostLogin;
+import Network.PostMusicSearch;
 import VO.AlbumVO;
 import VO.ArtistVO;
 import VO.DataVO;
@@ -77,6 +83,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private String artist;
     private String image;
     private String lyric;
+    private String date;
     private DataVO dataVO;
     private View view;
 
@@ -146,7 +153,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     animation = AnimationUtils.loadAnimation(getActivity(),R.anim.rotate);
                     loader.startAnimation(animation);
                     start();
-
                 } else {
                     //loader.setVisibility(View.INVISIBLE);
 
@@ -157,12 +163,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     Toast.makeText(getActivity(),"녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
 
                     Log.v("debug", "before stop");
-
-                    // TODO Auto-generated method stub
-
-
                 }
-
             }
         });
 
@@ -194,14 +195,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
         stopTime = System.currentTimeMillis();
     }
-
-//    protected void cancel() {
-//        if (mProcessing && this.mClient != null) {
-//            mProcessing = false;
-//            this.mClient.cancel();
-//        }
-//    }
-
 
     // Old api
     @Override
@@ -333,8 +326,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             artist = musicVO.getArtist().getName();
 
             sendData(musicVO);
-
-
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -474,11 +465,16 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         Date currentTime = new Date();
-        String date = format.format(currentTime);
+        date = format.format(currentTime);
+
+        Log.v("date", date+"");
 
         dataVO = new DataVO(artist, title, date, image, lyric);
-        write(dataVO);
+        //write(dataVO);
 
+
+        WriteTask task = new WriteTask();
+        task.execute();
     }
 
     //여기서 원래 http 통신을 해야함
@@ -508,4 +504,41 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
 
     }
 
+
+    private class WriteTask extends AsyncTask<Void, Void, String> {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        protected String doInBackground(Void... voids) {
+
+            PostMusicSearch musicSearch = new PostMusicSearch();
+            String response = null;
+            try {
+                response = musicSearch.post("http://54.180.30.183:3000/search", LoginActivity.id, dataVO);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+            super.onPostExecute(response);
+            JSONObject jObject = null;
+
+            try {
+                //회원가입 성공
+                jObject = new JSONObject(response);
+                String returnValue = jObject.getString("status");
+                if (returnValue.compareTo("OK") == 0) {
+                    Log.v("OK", "RECORD Fragment send");
+                } else {
+                    Toast.makeText(getActivity(), "데이터 전송 실패", Toast.LENGTH_SHORT).show();
+                    this.cancel(true);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

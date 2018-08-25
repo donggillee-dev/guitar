@@ -1,5 +1,6 @@
 package cse.ssu.guitar;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -53,13 +54,11 @@ public class SignInActivity extends AppCompatActivity {
 
                 SigninTask task = new SigninTask();
                 task.execute();
-
-
             }
         });
     }
 
-    class SigninTask extends AsyncTask<Void, Void, String> {
+    private class SigninTask extends AsyncTask<Void, Void, String> {
         @Override
         protected String doInBackground(Void... voids) {
 
@@ -83,7 +82,8 @@ public class SignInActivity extends AppCompatActivity {
                 try {
                     //회원가입 성공
                     jObject = new JSONObject(response);
-                    if (jObject.getString("status").compareTo("OK") == 0) {
+                    String returnValue = jObject.getString("status");
+                    if (returnValue.compareTo("OK") == 0) {
                         Toast.makeText(getApplicationContext(), "회원가입이 성공 했습니다.", Toast.LENGTH_SHORT).show();
                         finish();
                     } else {
