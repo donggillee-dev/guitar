@@ -12,26 +12,33 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import Network.GetMusicSearch;
 import VO.DataVO;
 
 public class SearchedMusicFragment extends Fragment implements MainActivity.onKeyBackPressedListener {
     public static SearchedMusicFragment newInstance() {
-        return new SearchedMusicFragment();
+        if(instance == null){
+            instance = new SearchedMusicFragment();
+        }
+        return instance;
     }
 
     private ListView list;
@@ -39,19 +46,31 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
     private TextView trackNum;
     private View view;
     private int flag = 0;
+    private JSONArray jArray;
+
+    private static SearchedMusicFragment instance = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_searched_music, container, false);
-
+        trackNum = view.findViewById(R.id.number);
         adapter = new ListViewAdapter();
         list = (ListView) view.findViewById(R.id.searched_list);
         list.setAdapter(adapter);
 
         flag = getArguments().getInt("flag");
-        createList();
+        //createList();
+
+
+        try {
+            GetDataTask task = new GetDataTask();
+            task.start();
+            task.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -68,12 +87,19 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
 
                 Log.v("debug", "item selected > " + name + " : " + artist);
 
-                DataVO data;
-                data = findData(name, artist);
+                DataVO data = null;
+                try {
+                    JSONObject jObject = jArray.getJSONObject(jArray.length() - 1 - position);
+                    data = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                    Log.v("data selected", data.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
                 Log.v("in Music List", data.toString());
                 bundle.putString("data", data.toString());
                 bundle.putBoolean("key", true);
+                bundle.putInt("flag", 4);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
@@ -82,42 +108,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         return view;
     }
 
-    private void createList() {
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
-        File directory = new File(path);
-        File[] files = directory.listFiles();
-        List<String> filesNameList = new ArrayList<>();
 
-
-        if (files.length != 0) {
-            for (int i = 0; i < files.length; i++) {
-                filesNameList.add(files[i].getName());
-            }
-
-            Collections.sort(filesNameList, new AscendingString());
-            DataVO dataVO = null;
-
-            for (int i = 0; i < files.length; i++) {
-                String fullpath = path + "/" + filesNameList.get(i);
-                try {
-                    FileInputStream fis = new FileInputStream(fullpath);
-                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-                    String result = "", temp = "";
-                    while ((temp = bufferReader.readLine()) != null) {
-                        result += temp;
-                    }
-                    Log.v("debug", "" + result);
-                    dataVO = parseData(result);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music), dataVO.getTitle(), dataVO.getArtist());
-            }
-        }
-
-        trackNum = (TextView) view.findViewById(R.id.number);
-        trackNum.setText(files.length + " Track");
-    }
 
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -136,58 +127,47 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         }
     }
 
-    class AscendingString implements Comparator<String> {
+    private class GetDataTask extends Thread {
         @Override
-        public int compare(String a, String b) {
-            return b.compareTo(a);
-        }
-    }
-
-    private DataVO parseData(String data) {
-        DataVO result = null;
-        Log.v("in parseData", data + "");
-        try {
-            JSONObject object = new JSONObject(data);
-            result = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return result;
-    }
-
-    private DataVO findData(String title, String artist) {
-        DataVO resultData = null;
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
-        File directory = new File(path);
-
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File[] files = directory.listFiles();
-        List<String> filesNameList = new ArrayList<>();
-        for (int i = 0; i < files.length; i++)
-            filesNameList.add(files[i].getName());
-        for (int i = 0; i < files.length; i++)
-            if (filesNameList.get(i).contains(title) && filesNameList.get(i).contains(artist)) {
-                String realPath = path + "/" + filesNameList.get(i);
-                try {
-                    FileInputStream fis = new FileInputStream(realPath);
-                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-
-                    String result = "", temp = "";
-                    while ((temp = bufferReader.readLine()) != null) {
-                        result += temp;
-                    }
-
-                    resultData = parseData(result);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        public void run() {
+            super.run();
+            GetMusicSearch musicSearch = new GetMusicSearch();
+            String response = null;
+            try {
+                Log.v("musiclist", "music list");
+                response = musicSearch.run("http://54.180.30.183:3000/musiclist", LoginActivity.token, LoginActivity.id);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-        return resultData;
+            JSONObject jObject = null;
+            DataVO dataVO = null;
+
+            try {
+                try {
+                    jObject = new JSONObject(response);
+                    String returnValue = jObject.getString("status");
+                    Log.v("return Value", returnValue+"");
+
+                    if(returnValue.compareTo("ERROR") == 0) {
+                        Log.v("no data", "no data");
+                    }
+                } catch (Exception e) {
+                    jArray = new JSONArray(response);
+                    trackNum.setText(jArray.length() + " Track");
+                    for (int i = jArray.length() - 1; i >= 0; i--) {
+                        jObject = jArray.getJSONObject(i);
+                        dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                        Log.v("data", dataVO.toString());
+                        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                dataVO.getTitle(), dataVO.getArtist());
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     private void replaceFragment(Fragment fragment) {

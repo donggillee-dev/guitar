@@ -1,46 +1,42 @@
 package Network;
 
 /**
- * Created by misconstructed on 2018. 8. 23..
+ * Created by misconstructed on 2018. 8. 25..
  */
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
 
 import okhttp3.FormBody;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-
-/**
- * Created by choisunpil on 2018. 5. 31..
- */
-
-public class PostLogin {
-
-    private Response response;
+public class PostRecord {
+    private OkHttpClient client;
     private RequestBody formBody;
     private Request request;
-    private OkHttpClient client = new OkHttpClient();
+    private Response response;
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public String post(String url, String id, String password) throws IOException {
+    public String run(String url, String token, String id, String record, String date, String name) throws IOException {
+
         client = new OkHttpClient();
         formBody = new FormBody.Builder()
+                .add("token", token)
                 .add("ID", id)
-                .add("password", password)
+                .add("record", record)
+                .add("date", date)
+                .add("name", name)
                 .build();
         request = new Request.Builder()
                 .url(url)
                 .post(formBody)
                 .build();
         try {
-            Log.v("body", request.url().toString());
             response = client.newCall(request).execute();
         } catch (Exception e) {
             e.printStackTrace();
@@ -48,4 +44,5 @@ public class PostLogin {
 
         return response.body().string();
     }
+
 }

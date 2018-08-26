@@ -10,42 +10,56 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import Network.GetMusicSearch;
+import Network.PostRecord;
+import VO.DataVO;
+import okhttp3.MultipartBody;
+
 public class MakeSheetFragment extends Fragment {
-
-    View view;
-
-    public static MakeSheetFragment newInstance() {
-        return new MakeSheetFragment();
-    }
 
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE = 1;
-    ToggleButton listenBtn;
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
     final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
+    ToggleButton listenBtn;
+    // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
+    MediaRecorder recorder;
+    private View view;
     private String filename;
     private String time;
     private String date;
     private String filepath;
     private ImageView loader;
     private Animation animation;
+    private boolean check;
 
-    // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
-    MediaRecorder recorder;
+    public static MakeSheetFragment newInstance() {
+        return new MakeSheetFragment();
+    }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_make_sheet, container, false);
@@ -125,13 +139,25 @@ public class MakeSheetFragment extends Fragment {
                     // TODO Auto-generated method stub
                     loader.clearAnimation();
                     animation.setAnimationListener(null);
-                    Bundle bundle = new Bundle();
-                    Fragment fragment = SheetFragment.newInstance();
 
-                    bundle.putString("name", time);
-                    bundle.putString("date", date);
-                    fragment.setArguments(bundle);
-                    replaceFragment(fragment);
+
+                    try {
+                        SendDataTask task = new SendDataTask();
+                        task.start();
+                        task.join();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    if(check == true) {
+                        Bundle bundle = new Bundle();
+                        Fragment fragment = SheetFragment.newInstance();
+
+                        bundle.putString("name", time);
+                        bundle.putString("date", date);
+                        fragment.setArguments(bundle);
+                        replaceFragment(fragment);
+                    }
                 }
             }
         });
@@ -143,5 +169,46 @@ public class MakeSheetFragment extends Fragment {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
+    }
+
+    private class SendDataTask extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            check = false;
+            PostRecord postRecord = new PostRecord();
+            String response = null;
+            //int data;
+
+            try {
+                Log.v("make sheet", "make sheet");
+                String record = "record tmp data";
+                Log.v("filename", filename+"");
+                File file = new File(filename);
+
+                response = postRecord.run("http://54.180.30.183:3000/record", LoginActivity.token, LoginActivity.id, "aaa", date, time);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            JSONObject jObject = null;
+
+            try {
+                    jObject = new JSONObject(response);
+                    String returnValue = jObject.getString("status");
+                    Log.v("return Value", returnValue+"");
+
+                    if(returnValue.compareTo("ERROR") == 0) {
+                        Log.v("ERROR", "ERROR");
+                    }
+                    else {
+                        Log.v("OK", "OK");
+                        check = true;
+                    }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 }

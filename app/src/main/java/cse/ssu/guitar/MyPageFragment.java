@@ -15,12 +15,14 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import Network.GetMusicSearch;
 import VO.DataVO;
 
 public class MyPageFragment extends Fragment {
@@ -40,6 +43,7 @@ public class MyPageFragment extends Fragment {
     private ListViewAdapter music_adapter, sheet_adapter;
     private TextView music_more, sheet_more;
     private View view;
+    private JSONArray jArray;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.mypage_fragment, container, false);
 
@@ -64,8 +68,16 @@ public class MyPageFragment extends Fragment {
         String date_string = sdf.format(date);
         Log.v("debug", date_string);
 
-        add_music_list();
-        add_sheet_list();
+        //add_music_list();
+        GetMusicTask getMusic = new GetMusicTask();
+        try {
+            getMusic.start();
+            getMusic.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+       // add_sheet_list();
 
 
         music.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -83,8 +95,14 @@ public class MyPageFragment extends Fragment {
 
                 Log.v("debug", "item selected > " + name + " : " + artist);
 
-                DataVO data;
-                data = findData(name, artist);
+                DataVO data = null;
+                try {
+                    JSONObject jObject = jArray.getJSONObject(jArray.length() - 1 - position);
+                    data = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                    Log.v("data selected", data.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
                 Log.v("in Music List", data.toString());
                 bundle.putString("data", data.toString());
@@ -150,171 +168,53 @@ public class MyPageFragment extends Fragment {
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
-    private void add_sheet_list() {
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar";
-        File directory = new File(path);
-        File[] files = directory.listFiles();
 
-        List<String> filesNameList = new ArrayList<>();
 
-        if(files == null || files.length<= 1) {
-            sheet.setVisibility(View.GONE);
-            TextView text = (TextView) view.findViewById(R.id.sheet_text);
-            text.setVisibility(View.VISIBLE);
-            sheet_more.setVisibility(View.INVISIBLE);
-        }
-        else {
-            Log.v("length", ""+files.length);
-            for (int i = 0; i < files.length; i++) {
-                filesNameList.add(files[i].getName());
-            }
 
-            Collections.sort(filesNameList, new AscendingString());
-            if(files.length > 3) {
-                for (int i = 1; i < 4; i++) {
 
-                    String filename = filesNameList.get(i).substring(0, 12);
-                    String date = parseDate(filename);
-                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
-                            filename, date);
-                }
-            }
-            else {
-                for (int i = 1; i < files.length; i++) {
-                    String filename = filesNameList.get(i).substring(0, 12);
-                    String date = parseDate(filename);
-                    sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
-                            filename, date);
-                }
-            }
-        }
-    }
-
-    private void add_music_list() {
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
-        File directory = new File(path);
-        File[] files = directory.listFiles();
-        DataVO dataVO = null;
-        List<String> filesNameList = new ArrayList<>();
-
-        if(files == null || files.length == 0) {
-            music.setVisibility(View.GONE);
-            TextView text = (TextView) view.findViewById(R.id.music_text);
-            text.setVisibility(View.VISIBLE);
-            music_more.setVisibility(View.INVISIBLE);
-        }
-        else  {
-            Log.v("length in music", ""+files.length);
-            for (int i = 0; i < files.length; i++) {
-                filesNameList.add(files[i].getName());
-            }
-            Log.v("file name", filesNameList.get(0));
-
-            Collections.sort(filesNameList, new AscendingString());
-            if(files.length >= 3) {
-                for (int i = 0; i < 3; i++) {
-                    String realPath = path + "/"+filesNameList.get(i);
-
-                    try {
-                        FileInputStream fis = new FileInputStream(realPath);
-                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-
-                        String result="", temp="";
-                        while( (temp = bufferReader.readLine()) != null ) {
-                            result += temp;
-                        }
-
-                        dataVO = parseData(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),dataVO.getTitle(), dataVO.getArtist());
-                }
-            }
-            else {
-                for (int i = 0; i < files.length; i++) {
-                    String realPath = path + "/"+filesNameList.get(i);
-
-                    try {
-                        FileInputStream fis = new FileInputStream(realPath);
-                        BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-
-                        String result="", temp="";
-                        while( (temp = bufferReader.readLine()) != null ) {
-                            result += temp;
-                        }
-
-                        dataVO = parseData(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),dataVO.getTitle(), dataVO.getArtist());
-                }
-            }
-        }
-    }
-
-    public String parseDate(String filename) {
-            String year = filename.substring(0, 2);
-            String month = filename.substring(2, 4);
-            String day = filename.substring(4, 6);
-
-            String date = "20"+year+"-"+month+"-"+day;
-            return date;
-
-    }
-
-    class AscendingString implements Comparator<String> {
+    private class GetMusicTask extends Thread {
         @Override
-        public int compare(String a, String b) {
-            return b.compareTo(a);
-        }
-    }
-
-    private DataVO parseData(String data) {
-        DataVO result = null;
-        Log.v("in parseData", data+"");
-        try {
-            JSONObject object = new JSONObject(data);
-            result = new DataVO(object.getString("artist"), object.getString("title"), object.getString("searched_date"), object.getString("image"), object.getString("lyric"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return result;
-    }
-
-    private DataVO findData(String title, String artist) {
-        DataVO resultData = null;
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar/log";
-        File directory = new File(path);
-
-        if(!directory.exists()){
-            directory.mkdirs();
-        }
-
-        File[] files = directory.listFiles();
-        List<String> filesNameList = new ArrayList<>();
-        for (int i = 0; i < files.length; i++)
-            filesNameList.add(files[i].getName());
-        for(int i = 0; i < files.length; i++)
-            if(filesNameList.get(i).contains(title) && filesNameList.get(i).contains(artist)) {
-                String realPath = path + "/" + filesNameList.get(i);
-                try {
-                    FileInputStream fis = new FileInputStream(realPath);
-                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
-
-                    String result="", temp="";
-                    while( (temp = bufferReader.readLine()) != null ) {
-                        result += temp;
-                    }
-
-                    resultData = parseData(result);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        public void run() {
+            super.run();
+            GetMusicSearch musicSearch = new GetMusicSearch();
+            String response = null;
+            try {
+                Log.v("musiclist", "music list");
+                response = musicSearch.run("http://54.180.30.183:3000/musiclist", LoginActivity.token, LoginActivity.id);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-        return resultData;
+            JSONObject jObject = null;
+            DataVO dataVO = null;
+
+            try {
+                try {
+                    jObject = new JSONObject(response);
+                    String returnValue = jObject.getString("status");
+                    Log.v("return Value", returnValue+"");
+
+                    if(returnValue.compareTo("ERROR") == 0) {
+                        music.setVisibility(View.GONE);
+                        TextView text = (TextView) view.findViewById(R.id.music_text);
+                        Button more = (Button) view.findViewById(R.id.more_music);
+                        text.setVisibility(View.VISIBLE);
+                        more.setVisibility(View.INVISIBLE);
+                    }
+                } catch (Exception e) {
+                    jArray = new JSONArray(response);
+                    for (int i = jArray.length() - 1; i > jArray.length() - 4; i--) {
+                        jObject = jArray.getJSONObject(i);
+                        dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                        Log.v("data", dataVO.toString());
+                        music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                dataVO.getTitle(), dataVO.getArtist());
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 }
