@@ -1,51 +1,51 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-android:id="@+id/sheetlist_layout"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:orientation="vertical"
-android:weightSum="100">
-
-<LinearLayout
+    android:id="@+id/sheetlist_layout"
     android:layout_width="match_parent"
-    android:layout_height="0dp"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_weight="17"
-    android:background="@drawable/color"
-    android:elevation="10dp">
+    android:weightSum="100">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="제작한 악보"
-        android:textSize="80px"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:paddingLeft="37dp"
-        android:paddingTop="13dp"/>
+        android:layout_height="0dp"
+        android:layout_weight="17"
+        android:background="@drawable/color"
+        android:elevation="10dp"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/number"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="37dp"
+            android:paddingTop="13dp"
+            android:text="제작한 악보"
+            android:textColor="@color/white"
+            android:textSize="80px"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="37dp"
+            android:paddingTop="5dp"
+            android:text="# Track"
+            android:textColor="@color/white"
+            android:textSize="55px" />
+
+    </LinearLayout>
+
+
+    <ListView
+        android:id="@+id/sheet_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="# Track"
-        android:textSize="55px"
-        android:textColor="@color/white"
-        android:paddingLeft="37dp"
-        android:paddingTop="5dp"/>
-
-</LinearLayout>
-
-
-<ListView
-    android:id="@+id/sheet_list"
-    android:layout_width="match_parent"
-    android:layout_height="0dp"
-    android:layout_weight="85"
-    android:dividerHeight="4dp"
-    android:layout_marginTop="10dp"
-    android:layout_marginLeft="10dp"
-    android:layout_marginRight="10dp"
-    android:layout_marginBottom="20dp">
-</ListView>
+        android:layout_height="0dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="85"
+        android:dividerHeight="4dp">
+    </ListView>
 
 </LinearLayout>

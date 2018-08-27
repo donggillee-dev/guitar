@@ -3,41 +3,35 @@ package cse.ssu.guitar;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import Network.GetMusicSearch;
 import Network.PostRecord;
-import VO.DataVO;
-import okhttp3.MultipartBody;
+import Network.PostAudioFile;
 
 public class MakeSheetFragment extends Fragment {
 
@@ -142,9 +136,8 @@ public class MakeSheetFragment extends Fragment {
 
 
                     try {
-                        SendDataTask task = new SendDataTask();
-                        task.start();
-                        task.join();
+                        SendAudioFile task = new SendAudioFile();
+                        task.execute();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -170,7 +163,29 @@ public class MakeSheetFragment extends Fragment {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
+    private class SendAudioFile extends AsyncTask<Void, Void, String> {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        protected String doInBackground(Void... voids) {
 
+            PostAudioFile tm = new PostAudioFile();
+            String response = null;
+            try {
+                response = tm.post("http://54.180.30.183:3000/record",filename);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+            super.onPostExecute(response);
+            Log.v("hi","hihi");
+            JSONObject jObject = null;
+
+        }
+    }
     private class SendDataTask extends Thread {
         @Override
         public void run() {

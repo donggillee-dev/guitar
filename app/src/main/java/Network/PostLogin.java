@@ -45,7 +45,9 @@ public class PostLogin {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        if(response==null)
+            return null;
+        //    Log.v("aaa","NULL");
         return response.body().string();
     }
 }

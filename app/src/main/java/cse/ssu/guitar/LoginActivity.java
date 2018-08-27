@@ -86,7 +86,8 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(String response) {
             super.onPostExecute(response);
             JSONObject jObject = null;
-
+            if(response==null)
+                Toast.makeText(getApplicationContext(), "Server off", Toast.LENGTH_SHORT).show();
             try {
                 //회원가입 성공
                 jObject = new JSONObject(response);
