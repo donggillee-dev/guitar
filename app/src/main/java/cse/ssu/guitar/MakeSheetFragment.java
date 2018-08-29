@@ -39,9 +39,9 @@ public class MakeSheetFragment extends Fragment {
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE = 1;
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
     final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
-    ToggleButton listenBtn;
+    private ToggleButton listenBtn;
     // MediaRecorder 클래스에  녹음에 관련된 메서드와 멤버 변수가 저장되어있다.
-    MediaRecorder recorder;
+    private MediaRecorder recorder;
     private View view;
     private String filename;
     private String time;
@@ -50,6 +50,7 @@ public class MakeSheetFragment extends Fragment {
     private ImageView loader;
     private Animation animation;
     private boolean check;
+    private String response;
 
     public static MakeSheetFragment newInstance() {
         return new MakeSheetFragment();
@@ -128,16 +129,15 @@ public class MakeSheetFragment extends Fragment {
                     recorder.stop();
                     recorder.release();
                     recorder = null;
-                    Toast.makeText(getActivity(),
-                            "녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
-                    // TODO Auto-generated method stub
+
                     loader.clearAnimation();
                     animation.setAnimationListener(null);
 
 
                     try {
                         SendAudioFile task = new SendAudioFile();
-                        task.execute();
+                        task.start();
+                        task.join();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -145,7 +145,7 @@ public class MakeSheetFragment extends Fragment {
                     if(check == true) {
                         Bundle bundle = new Bundle();
                         Fragment fragment = SheetFragment.newInstance();
-
+                        bundle.putString("response", response);
                         bundle.putString("name", time);
                         bundle.putString("date", date);
                         fragment.setArguments(bundle);
@@ -163,67 +163,21 @@ public class MakeSheetFragment extends Fragment {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
-    private class SendAudioFile extends AsyncTask<Void, Void, String> {
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-        @Override
-        protected String doInBackground(Void... voids) {
 
-            PostAudioFile tm = new PostAudioFile();
-            String response = null;
-            try {
-                response = tm.post("http://54.180.30.183:3000/record",filename);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return response;
-        }
-
-        @Override
-        protected void onPostExecute(String response) {
-            super.onPostExecute(response);
-            Log.v("hi","hihi");
-            JSONObject jObject = null;
-
-        }
-    }
-    private class SendDataTask extends Thread {
+    private class SendAudioFile extends Thread {
         @Override
         public void run() {
             super.run();
-            check = false;
-            PostRecord postRecord = new PostRecord();
-            String response = null;
-            //int data;
-
+            PostAudioFile tm = new PostAudioFile();
+            response = null;
             try {
-                Log.v("make sheet", "make sheet");
-                String record = "record tmp data";
-                Log.v("filename", filename+"");
-                File file = new File(filename);
-
-                response = postRecord.run("http://54.180.30.183:3000/record", LoginActivity.token, LoginActivity.id, "aaa", date, time);
+                response = tm.post(MainActivity.serverUrl+"record",filename);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            JSONObject jObject = null;
-
-            try {
-                    jObject = new JSONObject(response);
-                    String returnValue = jObject.getString("status");
-                    Log.v("return Value", returnValue+"");
-
-                    if(returnValue.compareTo("ERROR") == 0) {
-                        Log.v("ERROR", "ERROR");
-                    }
-                    else {
-                        Log.v("OK", "OK");
-                        check = true;
-                    }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
+            if(response != null)
+                check = true;
         }
     }
+
 }

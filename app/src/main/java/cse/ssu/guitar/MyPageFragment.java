@@ -180,7 +180,7 @@ public class MyPageFragment extends Fragment {
             String response = null;
             try {
                 Log.v("musiclist", "music list");
-                response = musicSearch.run("http://54.180.30.183:3000/musiclist", LoginActivity.token, LoginActivity.id);
+                response = musicSearch.run(MainActivity.serverUrl+"musiclist", LoginActivity.token, LoginActivity.id);
             } catch (IOException e) {
                 e.printStackTrace();
             }

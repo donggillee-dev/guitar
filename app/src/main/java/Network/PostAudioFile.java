@@ -15,10 +15,6 @@ import okhttp3.Response;
 public class PostAudioFile {
     private static final String TAG = "AudioFile";
 
-
-    private String mFilePath01;
-    private String mFilePath02;
-    final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
     private Response response;
     private RequestBody formBody;
     private Request request;

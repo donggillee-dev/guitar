@@ -135,7 +135,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
             String response = null;
             try {
                 Log.v("musiclist", "music list");
-                response = musicSearch.run("http://54.180.30.183:3000/musiclist", LoginActivity.token, LoginActivity.id);
+                response = musicSearch.run(MainActivity.serverUrl+"musiclist", LoginActivity.token, LoginActivity.id);
             } catch (IOException e) {
                 e.printStackTrace();
             }

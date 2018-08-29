@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 import Network.PostLogin;
 
@@ -75,7 +76,9 @@ public class LoginActivity extends AppCompatActivity {
             PostLogin postLogin = new PostLogin();
             String response = null;
             try {
-                response = postLogin.post("http://54.180.30.183:3000/login", id, password);
+                response = postLogin.post(MainActivity.serverUrl + "login", id, password);
+            } catch(TimeoutException e) {
+                Toast.makeText(getApplicationContext(), "Time out. Server Off", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -7,11 +7,10 @@ package Network;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
+import VO.SheetVO;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -23,7 +22,7 @@ import okhttp3.Response;
  * Created by choisunpil on 2018. 5. 31..
  */
 
-public class PostLogin {
+public class PostNote {
 
     private Response response;
     private RequestBody formBody;
@@ -31,11 +30,14 @@ public class PostLogin {
     private OkHttpClient client = new OkHttpClient();
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public String post(String url, String id, String password) throws IOException, TimeoutException {
+    public String post(String url, String token, String id, SheetVO sheet) throws IOException {
         client = new OkHttpClient();
         formBody = new FormBody.Builder()
                 .add("ID", id)
-                .add("password", password)
+                .add("token", token)
+                .add("name", sheet.getName())
+                .add("date", sheet.getDate())
+                .add("data", sheet.getNote().toString())
                 .build();
         request = new Request.Builder()
                 .url(url)

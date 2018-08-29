@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
+    public static String serverUrl = "http://54.180.30.183:3000/";
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {

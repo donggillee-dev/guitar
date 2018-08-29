@@ -65,7 +65,7 @@ public class SignInActivity extends AppCompatActivity {
             PostRegister postRegister = new PostRegister();
             String response = null;
             try {
-                response = postRegister.post("http://54.180.30.183:3000/register", user); //http://ttac.neinsys.io:8000/signup
+                response = postRegister.post(MainActivity.serverUrl+"register", user); //http://ttac.neinsys.io:8000/signup
             } catch (IOException e) {
                 e.printStackTrace();
             }

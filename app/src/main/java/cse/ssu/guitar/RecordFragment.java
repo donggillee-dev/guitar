@@ -513,7 +513,7 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             PostMusicSearch musicSearch = new PostMusicSearch();
             String response = null;
             try {
-                response = musicSearch.post("http://54.180.30.183:3000/search", LoginActivity.id, dataVO);
+                response = musicSearch.post(MainActivity.serverUrl+"search", LoginActivity.id, dataVO);
             } catch (IOException e) {
                 e.printStackTrace();
             }
