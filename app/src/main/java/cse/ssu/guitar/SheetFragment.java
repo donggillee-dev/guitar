@@ -106,7 +106,7 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
 
         JSONObject object = null;
         ArrayList<NoteVO> list = new ArrayList<>();
-        rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
+
 
         Log.v("response", response);
 
@@ -152,31 +152,147 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
             for(i = 0; i < size; i++)
                 Log.v("final result", list.get(i).toString());
 
-
+            insertNode(list, size);
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
+    }
+
+    private void insertNode(ArrayList<NoteVO> list, int size) {
+        int[] marginList = {90, 80, 70, 60, 50, 40, 30};
+        int i;
+        NoteVO note;
+        int topMargin = 0;
+        rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
+        int lineCount = 0;
+        int lineMargin = 0;
+        int leftMargin = 0;
+
+        for(i = 0; i < size; i++) {
+            note = list.get(i);
+            if(note.getNote() == 0 || note.getNote() == 1) {
+                topMargin = marginList[0];
+            }
+            else if(note.getNote() == 2 || note.getNote() == 3) {
+                topMargin = marginList[1];
+            }
+            else if(note.getNote() == 4) {
+                topMargin = marginList[2];
+            }
+            else if(note.getNote() == 5 || note.getNote() == 6) {
+                topMargin = marginList[3];
+            }
+            else if(note.getNote() == 7 || note.getNote() == 8) {
+                topMargin = marginList[4];
+            }
+            else if(note.getNote() == 9 || note.getNote() == 10) {
+                topMargin = marginList[5];
+            }
+            else if(note.getNote() == 11) {
+                topMargin = marginList[6];
+            }
+
+            if(note.getOctave() == 0) {
+                topMargin += 70;
+            }
+            else if(note.getOctave() == 2) {
+                topMargin -= 70;
+            }
+
+            topMargin += lineMargin;
 
 
-//
-//        for (i = 0; i < 13; i++) {
-//
-//            i = 0;
-//            for (; i < 13; i++) {
-//                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(80, 80);
-//
-//                ImageView iv = new ImageView(getActivity());
-//                iv.setImageResource(R.drawable.eighth_note);
-//
-//
-//                lp.alignWithParent = true;
-//                lp.leftMargin = i * 30 + 70;
-//                lp.topMargin = i * 10;
-//                iv.setLayoutParams(lp);
-//                rl.addView(iv);
-//            }
-//        }
+
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(80, 80);
+
+            ImageView iv = new ImageView(getActivity());
+
+            if(note.getTempo() == 1) {
+                iv.setImageResource(R.drawable.sixteenth_note);
+                if(note.getOctave() == 2) {
+                    iv.setImageResource(R.drawable.sixteenth_note_reverse);
+                    topMargin += 60;
+                }
+            }
+            else if(note.getTempo() == 2) {
+                iv.setImageResource(R.drawable.eighth_note);
+                if(note.getOctave() == 2) {
+                    iv.setImageResource(R.drawable.eighth_note_reverse);
+                    topMargin += 60;
+                }
+            }
+            else if(note.getTempo() == 3) {
+                iv.setImageResource(R.drawable.eighth_note_dot);
+                if(note.getOctave() == 2) {
+                    iv.setImageResource(R.drawable.eighth_note_dot_reverse);
+                    topMargin += 60;
+                }
+            }
+            else if(note.getTempo() == 4) {
+                iv.setImageResource(R.drawable.quarter_note);
+                if(note.getOctave() == 2) {
+                    iv.setImageResource(R.drawable.quarter_note_reverse);
+                    topMargin += 60;
+                }
+            }
+            else if(note.getTempo() == 5) {
+                iv.setImageResource(R.drawable.quater_note_dot);
+                if(note.getOctave() == 2){
+                    iv.setImageResource(R.drawable.quarter_note_reverse_dot);
+                   topMargin += 60;
+                }
+            }
+            else if(note.getTempo() == 6) {
+                iv.setImageResource(R.drawable.half_note);
+                if(note.getOctave() == 2) {
+                    iv.setImageResource(R.drawable.half_note_reverse);
+                    topMargin += 60;
+                }
+            }
+            else if(note.getTempo() == 7) {
+                iv.setImageResource(R.drawable.half_note_dot);
+                if(note.getOctave() == 2) {
+                    iv.setImageResource(R.drawable.half_note_dot_reverse);
+                    topMargin += 60;
+                }
+            }
+
+
+
+            lp.alignWithParent = true;
+            lp.leftMargin = leftMargin * 70 + 70;
+            lp.topMargin = topMargin;
+            iv.setLayoutParams(lp);
+            rl.addView(iv);
+
+            if(note.getBar() == 1) {
+                leftMargin++;
+                lineCount++;
+                if(lineCount == 1) {
+                    RelativeLayout.LayoutParams lpLine = new RelativeLayout.LayoutParams(80, 80);
+
+                    ImageView ivLine = new ImageView(getActivity());
+                    ivLine.setImageResource(R.drawable.line);
+                    lpLine.alignWithParent = true;
+
+                    lpLine.leftMargin = leftMargin * 70 + 70;
+                    lpLine.topMargin = lineMargin + 57;
+                    ivLine.setLayoutParams(lpLine);
+                    rl.addView(ivLine);
+                }
+            }
+
+
+            leftMargin++;
+
+
+            if(lineCount == 2) {
+                lineCount = 0;
+                lineMargin += 210;
+                leftMargin = 0;
+            }
+        }
     }
 }
