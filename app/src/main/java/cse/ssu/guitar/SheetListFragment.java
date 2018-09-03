@@ -17,12 +17,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +36,11 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import Network.GetSheet;
 import Network.PostLogin;
+import VO.DataVO;
+import VO.NoteVO;
+import VO.SheetVO;
 
 public class SheetListFragment extends Fragment implements MainActivity.onKeyBackPressedListener{
     public static SheetListFragment newInstance() {
@@ -44,6 +51,8 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
     private ListViewAdapter adapter;
     private View view;
     private TextView trackNum;
+    private JSONArray jArray;
+    private ArrayList <SheetVO> sheetList;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,9 +60,10 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
 
         view = inflater.inflate(R.layout.fragment_sheet_list, container, false);
 
-
+        sheetList = new ArrayList<>();
         adapter = new ListViewAdapter();
 
+        trackNum = (TextView)view.findViewById(R.id.number);
         list = (ListView)view.findViewById(R.id.sheet_list);
         list.setAdapter(adapter);
 
@@ -64,9 +74,15 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
         String date_string = sdf.format(date);
         Log.v("debug", date_string);
 
-        add_sheet_list();
+        GetSheetTask task = new GetSheetTask();
+        task.start();
+        try {
+            task.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-
+        trackNum.setText(sheetList.size() + " Track");
 
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -82,10 +98,13 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
                 date = date_view.getText().toString();
 
                 Log.v("debug", "item selected > " + name + " : " + date);
+                SheetVO sheetVO = sheetList.get(position);
 
-                bundle.putString("name", name);
-                bundle.putString("date", date);
-                bundle.putInt("flag",2);
+                bundle.putString("name", sheetVO.getName());
+                bundle.putString("date", sheetVO.getDate());
+                bundle.putString("data", sheetVO.getNote().toString());
+                bundle.putString("chord", sheetVO.getChord().toString());
+                bundle.putInt("flag",3);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
@@ -99,40 +118,73 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
-    private void add_sheet_list() {
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SSUGuitar";
-        File directory = new File(path);
-        File[] files = directory.listFiles();
+    private class GetSheetTask extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            GetSheet sheetSearch = new GetSheet();
+            String response = null;
+            try {
+                Log.v("sheet list ", "sheet list");
+                response = sheetSearch.run(MainActivity.serverUrl+"sheet/load", LoginActivity.token, LoginActivity.id);
+                Log.v("sheet response", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        List<String> filesNameList = new ArrayList<>();
+            JSONObject jObject = null;
 
-        for (int i = 0; i < files.length; i++) {
-            filesNameList.add(files[i].getName());
+            try {
+                try {
+                    jObject = new JSONObject(response);
+                    String returnValue = jObject.getString("status");
+                    Log.v("return Value", returnValue+"");
+
+                    if(returnValue.compareTo("ERROR") == 0) {
+                        Log.v("ERROR", "no sheet list in DB");
+                    }
+                } catch (Exception e) {
+                    jArray = new JSONArray(response);
+
+                    for(int i = 0; i < jArray.length(); i++) {
+                        JSONObject object = jArray.getJSONObject(i);
+                        SheetVO sheet = new SheetVO(object.getString("name"), object.getString("date"));
+                        JSONArray dataArray = new JSONArray(object.getString("data"));
+                        for(int j = 0; j < dataArray.length(); j++) {
+                            NoteVO tmpNote = new NoteVO(dataArray.getJSONObject(j).getInt("note"), dataArray.getJSONObject(j).getInt("tempo"), dataArray.getJSONObject(j).getInt("octave"), dataArray.getJSONObject(j).getInt("bar"));
+                            sheet.addNote(tmpNote);
+                        }
+                        String tmpString = object.getString("chord");
+                        tmpString = tmpString.replace("[", " ");
+                        tmpString = tmpString.replace("]", " ");
+                        String chordList[] = tmpString.split(",");
+
+                        for(int j = 0; j < chordList.length; j++) {
+                            sheet.addChord(chordList[j].trim());
+                            Log.v("add chord", chordList[j].trim());
+                        }
+
+                        sheetList.add(sheet);
+                        Log.v("sheet list", sheet.toString());
+                    }
+
+                    SortSheet sortSheet = new SortSheet();
+                    Collections.sort(sheetList, sortSheet);
+
+                    for(int i = 0; i < sheetList.size(); i++) {
+                        SheetVO tmp = sheetList.get(i);
+                        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                tmp.getName(), tmp.getDate());
+                    }
+
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
-
-        Collections.sort(filesNameList, new AscendingString());
-
-        for(int i = 1; i < filesNameList.size(); i++) {
-
-            String filename = filesNameList.get(i).substring(0, 12);
-            String date = parseDate(filename);
-            adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
-                    filename , date);
-        }
-
-        trackNum = (TextView)view.findViewById(R.id.number);
-        trackNum.setText(files.length - 1 + " Track");
     }
 
-    public String parseDate(String filename) {
-        String year = filename.substring(0, 2);
-        String month = filename.substring(2, 4);
-        String day = filename.substring(4, 6);
-
-        String date = "20"+year+"-"+month+"-"+day;
-        return date;
-
-    }
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         ((MainActivity) activity).setOnKeyBackPressedListener(this);
@@ -147,13 +199,13 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
         // MainFragment 로 교체
         replaceFragment(fragment);
     }
-    class AscendingString implements Comparator<String> {
+
+    private class SortSheet implements Comparator<SheetVO> {
         @Override
-        public int compare(String a, String b) {
-            return b.compareTo(a);
+        public int compare(SheetVO o1, SheetVO o2) {
+            return o2.getName().compareTo(o1.getName());
         }
     }
-
 }
 
 

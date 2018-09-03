@@ -47,6 +47,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
     private View view;
     private int flag = 0;
     private JSONArray jArray;
+    private ArrayList<DataVO> musicList;
 
     private static SearchedMusicFragment instance = null;
 
@@ -57,6 +58,7 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         view = inflater.inflate(R.layout.fragment_searched_music, container, false);
         trackNum = view.findViewById(R.id.number);
         adapter = new ListViewAdapter();
+        musicList = new ArrayList<>();
         list = (ListView) view.findViewById(R.id.searched_list);
         list.setAdapter(adapter);
 
@@ -141,7 +143,6 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
             }
 
             JSONObject jObject = null;
-            DataVO dataVO = null;
 
             try {
                 try {
@@ -155,12 +156,20 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
                 } catch (Exception e) {
                     jArray = new JSONArray(response);
                     trackNum.setText(jArray.length() + " Track");
-                    for (int i = jArray.length() - 1; i >= 0; i--) {
+                    for (int i = 0; i < jArray.length(); i++) {
                         jObject = jArray.getJSONObject(i);
-                        dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                        DataVO dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
                         Log.v("data", dataVO.toString());
+                        musicList.add(dataVO);
+                    }
+
+                    SortMusic sortMusic = new SortMusic();
+                    Collections.sort(musicList, sortMusic);
+
+                    for(int i = 0; i < musicList.size(); i++) {
+                        DataVO tmp = musicList.get(i);
                         adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
-                                dataVO.getTitle(), dataVO.getArtist());
+                                tmp.getTitle(), tmp.getArtist());
                     }
                 }
             } catch (Exception e) {
@@ -176,4 +185,10 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
+    private class SortMusic implements Comparator<DataVO> {
+        @Override
+        public int compare(DataVO o1, DataVO o2) {
+            return o2.getSearched_date().compareTo(o1.getSearched_date());
+        }
+    }
 }

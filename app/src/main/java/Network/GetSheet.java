@@ -4,21 +4,15 @@ package Network;
  * Created by misconstructed on 2018. 8. 25..
  */
 
-import android.util.Log;
-
-import org.json.JSONException;
-
-import org.json.JSONObject;
 import java.io.IOException;
 
 import okhttp3.FormBody;
-import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class GetMusicSearch {
+public class GetSheet {
     private OkHttpClient client;
     private RequestBody formBody;
     private Request request;
@@ -34,7 +28,6 @@ public class GetMusicSearch {
                 .url(url)
                 .post(formBody)
                 .build();
-
         try {
             response = client.newCall(request).execute();
         } catch (Exception e) {

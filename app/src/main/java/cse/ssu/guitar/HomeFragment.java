@@ -23,6 +23,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import Network.GetMusicSearch;
 import VO.DataVO;
@@ -40,10 +43,12 @@ public class HomeFragment extends Fragment {
     private ListViewAdapter adapter;
     private View view;
     private JSONArray jArray;
+    private ArrayList<DataVO> musiclist;
 
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.home_fragment, container, false);
+        musiclist = new ArrayList<>();
 
         Activity activity = (MainActivity)getActivity();
         final BottomNavigationView menu = (BottomNavigationView)activity.findViewById(R.id.navigation);
@@ -97,29 +102,11 @@ public class HomeFragment extends Fragment {
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView name_view, artist_view;
-                String name, artist;
                 Fragment fragment = MusicFragment.newInstance();
                 Bundle bundle = new Bundle();
 
-                name_view = (TextView)view.findViewById(R.id.textView1);
-                artist_view = (TextView)view.findViewById(R.id.textView2);
-                name = name_view.getText().toString();
-                artist = artist_view.getText().toString();
+                DataVO data = musiclist.get(position);
 
-                Log.v("debug", "item selected > " + name + " : " + artist + "  " + position);
-
-                DataVO data = null;
-                try {
-                    JSONObject jObject = jArray.getJSONObject(jArray.length() - 1 - position);
-                    data = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
-                    Log.v("data selected", data.toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                //data = findData(name, artist);
-
-               // Log.v("in Homefragment", data.toString());
                 bundle.putString("data", data.toString());
                 bundle.putInt("flag",1);
                 fragment.setArguments(bundle);
@@ -134,7 +121,6 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onClick(View v) {
-                Log.v("debug", "more");
                 Bundle bundle = new Bundle();
                 bundle.putInt("flag",1);
                 Fragment fragment = SearchedMusicFragment.newInstance();
@@ -168,7 +154,6 @@ public class HomeFragment extends Fragment {
             }
 
             JSONObject jObject = null;
-            DataVO dataVO = null;
 
             try {
                 try {
@@ -185,12 +170,29 @@ public class HomeFragment extends Fragment {
                     }
                 } catch (Exception e) {
                     jArray = new JSONArray(response);
-                    for (int i = jArray.length() - 1; i > jArray.length() - 4; i--) {
+                    for (int i = 0; i < jArray.length(); i++) {
                         jObject = jArray.getJSONObject(i);
-                        dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                        DataVO dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
                         Log.v("data", dataVO.toString());
-                        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
-                                dataVO.getTitle(), dataVO.getArtist());
+                        musiclist.add(dataVO);
+                    }
+
+                    SortMusic sortMusic = new SortMusic();
+                    Collections.sort(musiclist, sortMusic);
+
+                    if(musiclist.size() > 3) {
+                        for(int i = 0; i < 3; i++) {
+                            DataVO tmp = musiclist.get(i);
+                            adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                    tmp.getTitle(), tmp.getArtist());
+                        }
+                    }
+                    else {
+                        for(int i = 0; i < musiclist.size(); i++) {
+                            DataVO tmp = musiclist.get(i);
+                            adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                    tmp.getTitle(), tmp.getArtist());
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -200,4 +202,10 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private class SortMusic implements Comparator<DataVO> {
+        @Override
+        public int compare(DataVO o1, DataVO o2) {
+            return o2.getSearched_date().compareTo(o1.getSearched_date());
+        }
+    }
 }

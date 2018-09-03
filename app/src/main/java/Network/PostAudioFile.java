@@ -19,8 +19,9 @@ public class PostAudioFile {
     private RequestBody formBody;
     private Request request;
     private OkHttpClient client;
+    private String returnValue;
 
-    public String post(String url, String audioFileName) throws IOException {
+    public String post(String url, String audioFileName, String title) throws IOException {
 //        String filename = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/" + audioFileName + ".mp3";
         File f = new File(audioFileName);
         Log.v(TAG,String.valueOf(f.length()));
@@ -29,7 +30,7 @@ public class PostAudioFile {
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("record","tmp.mp3", RequestBody.create(MultipartBody.FORM, new File(audioFileName)))
+                .addFormDataPart("record",title+".mp3", RequestBody.create(MultipartBody.FORM, new File(audioFileName)))
                 .build();
         Request request = new Request.Builder()
                 .url(url)
@@ -42,7 +43,8 @@ public class PostAudioFile {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return response.body().string();
+        returnValue = response.body().string();
+        Log.v("return value", returnValue);
+        return returnValue;
     }
 }

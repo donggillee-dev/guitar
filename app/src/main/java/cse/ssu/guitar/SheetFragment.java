@@ -21,13 +21,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.concurrent.TimeoutException;
 
-import Network.PostNote;
-import Network.PostRecord;
+import Network.PostResendSheet;
 import VO.NoteVO;
 import VO.SheetVO;
 
@@ -38,8 +36,11 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
     private String name, date;
     private int flag=0;
     private RelativeLayout rl;
-    private JSONArray array;
     private String response;
+    private String note;
+    private String chord;
+    private String data;
+    private SheetVO sheet;
 
     public static SheetFragment newInstance() {
         return new SheetFragment();
@@ -47,66 +48,50 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_sheet, container, false);
+        Log.v("in sheet", "insheet");
         name_view = (TextView) view.findViewById(R.id.name);
         date_view = (TextView) view.findViewById(R.id.date);
 
         name = getArguments().getString("name");
         date = getArguments().getString("date");
         flag = getArguments().getInt("flag");
-        response = getArguments().getString("response");
+        Log.v("flag", flag+"");
 
         name_view.setText(name);
         date_view.setText(date);
 
-        createSheet(response);
+        if(flag == 1 || flag == 3) {
+            note = getArguments().getString("data");
+            chord = getArguments().getString("chord");
+            Log.v("note", note);
+            Log.v("chord", chord);
+            createStoredSheet(name, date, note, chord);
+        }
+        else if(flag == 2) {
+            Log.v("flag 2", "flag 2");
+            response = getArguments().getString("response");
+            Log.v("response", response);
+            createSheet(name, date, response);
+        }
 
         return view;
     }
 
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        ((MainActivity) activity).setOnKeyBackPressedListener(this);
-    }
-
-    @Override
-    public void onBack() {
-        MainActivity activity = (MainActivity) getActivity();
-        // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
-        activity.setOnKeyBackPressedListener(null);
-        if(flag==1)
-            replaceFragment(MyPageFragment.newInstance());
-        else if(flag==2)
-            replaceFragment(SheetListFragment.newInstance());
-    }
-
-    private void replaceFragment(Fragment fragment) {
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.content, fragment);
-        fragmentTransaction.commit();
-    }
 
 
-    private void createSheet(String response) {
-        NoteVO note;
-        int count = 0;
-        int line = 0;
+    private void createSheet(String name, String date, String response) {
         int size = 0;
         int i;
         int chordCount;
-        int tempoCount;
-        int octaveCount;
-        int barCount;
-        int noteCount;
-        JSONArray chordArray = null;
+        JSONArray chordTmpArray = null;
         JSONArray tempoArray = null;
         JSONArray octaveArray = null;
         JSONArray barArray = null;
         JSONArray noteArray = null;
 
         JSONObject object = null;
-        ArrayList<NoteVO> list = new ArrayList<>();
-
+        ArrayList<String> chordArray = new ArrayList<>();
+        sheet = new SheetVO(name, date);
 
         Log.v("response", response);
 
@@ -117,7 +102,9 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
                 String tmpString = array.getString(0);
                 JSONObject tmpObject = new JSONObject(tmpString);
                 Log.v("tmpobject", tmpObject.toString());
-                chordArray = tmpObject.getJSONArray("chords");
+                data = tmpObject.toString();
+
+                chordTmpArray = tmpObject.getJSONArray("chords");
                 tempoArray = tmpObject.getJSONArray("duration");
                 octaveArray = tmpObject.getJSONArray("octave");
                 barArray = tmpObject.getJSONArray("bar");
@@ -128,12 +115,7 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
                 Toast.makeText(getActivity(), "악보 생성 실패.", Toast.LENGTH_LONG).show();
                 return;
             }
-            chordCount = chordArray.length();
-            tempoCount = tempoArray.length();
-            octaveCount = octaveArray.length();
-            barCount = barArray.length();
-            noteCount = noteArray.length();
-            barCount = (int) barArray.get(1);
+            chordCount = chordTmpArray.length();
 
             int tmpCount = 0;
             int barIndex = 0;
@@ -146,13 +128,66 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
                     barIndex++;
                 }
                 NoteVO tmpNote = new NoteVO(noteArray.getInt(i), tempoArray.getInt(i), octaveArray.getInt(i), bar);
-                list.add(tmpNote);
+                sheet.addNote(tmpNote);
+                //list.add(tmpNote);
+            }
+            for(i = 0; i < chordCount; i++) {
+                String tmp = chordTmpArray.getString(i);
+                if(tmp.compareTo("...") == 0)
+                    chordArray.add(chordArray.get(i - 1));
+                else
+                    chordArray.add(tmp);
             }
 
-            for(i = 0; i < size; i++)
-                Log.v("final result", list.get(i).toString());
+            for(i = 0; i < chordCount; i++) {
+                Log.v("chord list", chordArray.get(i));
+                sheet.addChord(chordArray.get(i));
+            }
 
-            insertNode(list, size);
+            insertNode(sheet, size);
+
+            ResendSheetTask task = new ResendSheetTask();
+            task.start();
+            task.join();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void createStoredSheet(String name, String date, String note, String chord) {
+        int size = 0;
+        int i;
+        JSONObject object = null;
+        ArrayList<NoteVO> list = new ArrayList<>();
+        ArrayList<String> chordArray = new ArrayList<>();
+        sheet = new SheetVO(name, date);
+
+        try {
+
+            JSONArray tmpArray = new JSONArray(note);
+            size = tmpArray.length();
+            JSONObject tmpObject;
+            NoteVO tmpNote;
+            for(i = 0; i < size; i++) {
+                tmpObject = tmpArray.getJSONObject(i);
+                tmpNote = new NoteVO(tmpObject.getInt("note"), tmpObject.getInt("tempo"), tmpObject.getInt("octave"), tmpObject.getInt("bar"));
+                sheet.addNote(tmpNote);
+            }
+
+            chord = chord.replace("[", " ");
+            chord = chord.replace("]", " ");
+            String chordList[] = chord.split(",");
+
+            for(int j = 0; j < chordList.length; j++) {
+                sheet.addChord(chordList[j].trim());
+                Log.v("add chord", chordList[j].trim());
+            }
+
+            insertNode(sheet, size);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -160,15 +195,22 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
 
     }
 
-    private void insertNode(ArrayList<NoteVO> list, int size) {
+    private void insertNode(SheetVO sheet, int size) {
         int[] marginList = {90, 80, 70, 60, 50, 40, 30};
         int i;
         NoteVO note;
         int topMargin = 0;
-        rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
         int lineCount = 0;
         int lineMargin = 0;
         int leftMargin = 0;
+        int nodeCount = 0;
+        int startMargin = 0;
+        int endMargin = 0;
+        int chord = 0;
+        ArrayList <NoteVO> list = sheet.getNote();
+        ArrayList <String> chordArray = sheet.getChord();
+
+        rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
 
         for(i = 0; i < size; i++) {
             note = list.get(i);
@@ -213,63 +255,67 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
                 iv.setImageResource(R.drawable.sixteenth_note);
                 if(note.getOctave() == 2) {
                     iv.setImageResource(R.drawable.sixteenth_note_reverse);
-                    topMargin += 60;
+                    topMargin += 58;
                 }
             }
             else if(note.getTempo() == 2) {
                 iv.setImageResource(R.drawable.eighth_note);
                 if(note.getOctave() == 2) {
                     iv.setImageResource(R.drawable.eighth_note_reverse);
-                    topMargin += 60;
+                    topMargin += 58;
                 }
             }
             else if(note.getTempo() == 3) {
                 iv.setImageResource(R.drawable.eighth_note_dot);
                 if(note.getOctave() == 2) {
                     iv.setImageResource(R.drawable.eighth_note_dot_reverse);
-                    topMargin += 60;
+                    topMargin += 58;
                 }
             }
             else if(note.getTempo() == 4) {
                 iv.setImageResource(R.drawable.quarter_note);
                 if(note.getOctave() == 2) {
                     iv.setImageResource(R.drawable.quarter_note_reverse);
-                    topMargin += 60;
+                    topMargin += 58;
                 }
             }
             else if(note.getTempo() == 5) {
                 iv.setImageResource(R.drawable.quater_note_dot);
                 if(note.getOctave() == 2){
                     iv.setImageResource(R.drawable.quarter_note_reverse_dot);
-                   topMargin += 60;
+                   topMargin += 58;
                 }
             }
             else if(note.getTempo() == 6) {
                 iv.setImageResource(R.drawable.half_note);
                 if(note.getOctave() == 2) {
                     iv.setImageResource(R.drawable.half_note_reverse);
-                    topMargin += 60;
+                    topMargin += 58;
                 }
             }
             else if(note.getTempo() == 7) {
                 iv.setImageResource(R.drawable.half_note_dot);
                 if(note.getOctave() == 2) {
                     iv.setImageResource(R.drawable.half_note_dot_reverse);
-                    topMargin += 60;
+                    topMargin += 58;
                 }
             }
-
-
 
             lp.alignWithParent = true;
             lp.leftMargin = leftMargin * 70 + 70;
             lp.topMargin = topMargin;
             iv.setLayoutParams(lp);
             rl.addView(iv);
+            nodeCount++;
+
+            if(nodeCount == 1)
+                startMargin = leftMargin * 70 + 70 + 20;
 
             if(note.getBar() == 1) {
                 leftMargin++;
                 lineCount++;
+                nodeCount = 0;
+                endMargin = leftMargin * 70 + 50;
                 if(lineCount == 1) {
                     RelativeLayout.LayoutParams lpLine = new RelativeLayout.LayoutParams(80, 80);
 
@@ -284,15 +330,77 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
                 }
             }
 
-
             leftMargin++;
-
 
             if(lineCount == 2) {
                 lineCount = 0;
                 lineMargin += 210;
                 leftMargin = 0;
             }
+
+//            RelativeLayout.LayoutParams lpStart = new RelativeLayout.LayoutParams(80, 80);
+//            TextView textView = new TextView(getActivity());
+//            textView.setText(chordArray.get(chord++));
+//            textView.setTextSize(20);
+//            lpStart.alignWithParent = true;
+//
+//            lpStart.leftMargin = startMargin;
+//            lpStart.topMargin = lineMargin - 20;
+//            textView.setLayoutParams(lpStart);
+//            rl.addView(textView);
+//
+//            RelativeLayout.LayoutParams lpEnd = new RelativeLayout.LayoutParams(80, 80);
+//            textView = new TextView(getActivity());
+//            textView.setText(chordArray.get(chord++));
+//            textView.setTextSize(20);
+//            lpEnd.alignWithParent = true;
+//
+//            lpEnd.leftMargin = startMargin;
+//            lpEnd.topMargin = lineMargin - 20;
+//            textView.setLayoutParams(lpEnd);
+//            rl.addView(textView);
         }
+    }
+
+    private class ResendSheetTask extends Thread {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void run() {
+            super.run();
+            PostResendSheet resend = new PostResendSheet();
+            response = null;
+            try {
+                response = resend.post(MainActivity.serverUrl+"sheet/store", LoginActivity.token, LoginActivity.id, name, date, sheet.getNote().toString(), sheet.getChord().toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        ((MainActivity) activity).setOnKeyBackPressedListener(this);
+    }
+
+    @Override
+    public void onBack() {
+        MainActivity activity = (MainActivity) getActivity();
+        // 한번 뒤로가기 버튼을 눌렀다면 Listener 를 null 로 해제해줍니다.
+        activity.setOnKeyBackPressedListener(null);
+        if(flag == 1)
+            replaceFragment(MyPageFragment.newInstance());
+        else if(flag == 2)
+            replaceFragment(MakeSheetFragment.newInstance());
+        else if(flag == 3)
+            replaceFragment(SheetListFragment.newInstance());
+    }
+
+    private void replaceFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.content, fragment);
+        fragmentTransaction.commit();
     }
 }

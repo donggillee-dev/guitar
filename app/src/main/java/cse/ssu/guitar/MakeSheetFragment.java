@@ -3,8 +3,6 @@ package cse.ssu.guitar;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
@@ -23,14 +21,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import Network.PostRecord;
 import Network.PostAudioFile;
 
 public class MakeSheetFragment extends Fragment {
@@ -68,8 +63,9 @@ public class MakeSheetFragment extends Fragment {
                     new String[]{Manifest.permission.RECORD_AUDIO},
                     MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
         }
-        permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
+
+        int permissionCheck2 = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permissionCheck2 == PackageManager.PERMISSION_DENIED) {
             // 권한 없음
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
@@ -79,75 +75,33 @@ public class MakeSheetFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 if (listenBtn.isChecked() == true) {
-                    if (recorder != null) {
-                        recorder.stop();
-                        recorder.release();
-                        recorder = null;
-                    }
-                    // 실험 결과 왠만하면 아래 recorder 객체의 속성을 지정하는 순서는 이대로 하는게 좋다 위치를 바꿨을때 에러가 났었음
-                    // 녹음 시작을 위해  MediaRecorder 객체  recorder를 생성한다.
-                    recorder = new MediaRecorder();
-                    // 오디오 입력 형식 설정
-                    recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                    recorder.setAudioSamplingRate(44100);
-                    recorder.setAudioEncodingBitRate(96000);
-                    // 음향을 저장할 방식을 설정
-                    recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                    // 오디오 인코더 설정
-                    recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                    Toast.makeText(getActivity(), "녹음이 시작되었습니다.", Toast.LENGTH_LONG).show();
+                    animation = AnimationUtils.loadAnimation(getActivity(),R.anim.rotate);
+                    loader.startAnimation(animation);
+                    startRecording startRecording = new startRecording();
+                    startRecording.start();
 
-                    filepath = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar";
-                    File file = new File(filepath);
-                    if(!file.exists()){
-                        file.mkdirs();
-                    }
-
-                    //파일명 임의로 생성
-                    SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmmss");
-                    SimpleDateFormat format_2 = new SimpleDateFormat("yyyy-MM-dd");
-                    Date currentTime = new Date();
-                    time = format.format(currentTime);
-                    date = format_2.format(currentTime);
-                    Log.v("time", time);
-                    filename = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/" + time + ".mp3";
-
-                    // 저장될 파일 지정
-                    recorder.setOutputFile(filename);
-                    try {
-                        Toast.makeText(getActivity(), "녹음이 시작되었습니다.", Toast.LENGTH_LONG).show();
-                        animation = AnimationUtils.loadAnimation(getActivity(),R.anim.rotate);
-                        loader.startAnimation(animation);
-                        // 녹음 준비,시작
-                        recorder.prepare();
-                        recorder.start();
-                    } catch (Exception ex) {
-                        Log.e("SampleAudioRecorder", "Exception : ", ex);
-                    }
                 } else {
-                    if (recorder == null)
-                        return;
-                    recorder.stop();
-                    recorder.release();
-                    recorder = null;
-
                     loader.clearAnimation();
                     animation.setAnimationListener(null);
 
+                    stopRecording stopRecording = new stopRecording();
+                    stopRecording.start();
 
                     try {
-                        SendAudioFile task = new SendAudioFile();
-                        task.start();
-                        task.join();
-                    } catch (Exception e) {
+                        stopRecording.join();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
+                    Log.v("before bundle", "***");
                     if(check == true) {
+                        Log.v("response in make sheet", response);
                         Bundle bundle = new Bundle();
                         Fragment fragment = SheetFragment.newInstance();
                         bundle.putString("response", response);
                         bundle.putString("name", time);
                         bundle.putString("date", date);
+                        bundle.putInt("flag",2);
                         fragment.setArguments(bundle);
                         replaceFragment(fragment);
                     }
@@ -168,16 +122,88 @@ public class MakeSheetFragment extends Fragment {
         @Override
         public void run() {
             super.run();
+            Log.v("in send audiofile", "***");
             PostAudioFile tm = new PostAudioFile();
             response = null;
             try {
-                response = tm.post(MainActivity.serverUrl+"record",filename);
+                response = tm.post(MainActivity.serverUrl+"record",filename, time);
+                if(response != null)
+                    check = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(response != null)
-                check = true;
         }
     }
 
+    private class startRecording extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            Log.v("in start recording", "***");
+            if (recorder != null) {
+                recorder.stop();
+                recorder.release();
+                recorder = null;
+            }
+            // 실험 결과 왠만하면 아래 recorder 객체의 속성을 지정하는 순서는 이대로 하는게 좋다 위치를 바꿨을때 에러가 났었음
+            // 녹음 시작을 위해  MediaRecorder 객체  recorder를 생성한다.
+            recorder = new MediaRecorder();
+            // 오디오 입력 형식 설정
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            recorder.setAudioSamplingRate(44100);
+            recorder.setAudioEncodingBitRate(96000);
+            // 음향을 저장할 방식을 설정
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            // 오디오 인코더 설정
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+
+            filepath = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar";
+            File file = new File(filepath);
+            if(!file.exists()){
+                file.mkdirs();
+            }
+
+            //파일명 임의로 생성
+            SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmmss");
+            SimpleDateFormat format_2 = new SimpleDateFormat("yyyy-MM-dd");
+            Date currentTime = new Date();
+            time = format.format(currentTime);
+            date = format_2.format(currentTime);
+            Log.v("time", time);
+            filename = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/" + time + ".mp3";
+
+            // 저장될 파일 지정
+            recorder.setOutputFile(filename);
+            try {
+                // 녹음 준비,시작
+                recorder.prepare();
+                recorder.start();
+            } catch (Exception ex) {
+                Log.e("SampleAudioRecorder", "Exception : ", ex);
+            }
+        }
+    }
+
+    private class stopRecording extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            Log.v("in stop recording", "***");
+            if (recorder == null)
+                return;
+
+            recorder.stop();
+            recorder.reset();
+            recorder.release();
+            recorder = null;
+
+            try {
+                SendAudioFile task = new SendAudioFile();
+                task.start();
+                task.join();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

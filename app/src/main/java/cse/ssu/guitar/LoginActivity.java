@@ -35,6 +35,11 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        if(token != null) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
 
         loginButton = (Button) findViewById(R.id.loginButton);
         signUpButton = (Button) findViewById(R.id.signUpButton);
@@ -89,28 +94,28 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(String response) {
             super.onPostExecute(response);
             JSONObject jObject = null;
-            if(response==null)
+            if(response == null)
                 Toast.makeText(getApplicationContext(), "Server off", Toast.LENGTH_SHORT).show();
-            try {
-                //회원가입 성공
-                jObject = new JSONObject(response);
-                String returnValue = jObject.getString("status");
-                if (returnValue.compareTo("ok") == 0) {
-                    Toast.makeText(getApplicationContext(), "성공적으로 로그인했습니다. ", Toast.LENGTH_SHORT).show();
-                    token = jObject.getString("token");
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(getApplicationContext(), "로그인 실패", Toast.LENGTH_SHORT).show();
-                    this.cancel(true);
+            else {
+                try {
+                    //회원가입 성공
+                    jObject = new JSONObject(response);
+                    String returnValue = jObject.getString("status");
+                    if (returnValue.compareTo("ok") == 0) {
+                        Toast.makeText(getApplicationContext(), "성공적으로 로그인했습니다. ", Toast.LENGTH_SHORT).show();
+                        token = jObject.getString("token");
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "로그인 실패", Toast.LENGTH_SHORT).show();
+                        this.cancel(true);
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
-
-
         }
     }
 }

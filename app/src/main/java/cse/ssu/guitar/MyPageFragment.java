@@ -29,10 +29,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import Network.GetMusicSearch;
+import Network.GetSheet;
 import VO.DataVO;
+import VO.NoteVO;
+import VO.SheetVO;
 
 public class MyPageFragment extends Fragment {
     public static MyPageFragment newInstance() {
@@ -44,10 +48,13 @@ public class MyPageFragment extends Fragment {
     private TextView music_more, sheet_more;
     private View view;
     private JSONArray jArray;
+    private ArrayList<SheetVO> sheetlist;
+    private ArrayList <DataVO> musiclist;
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.mypage_fragment, container, false);
 
-
+        sheetlist = new ArrayList<>();
+        musiclist = new ArrayList<>();
         music_adapter = new ListViewAdapter();
         sheet_adapter = new ListViewAdapter();
 
@@ -60,49 +67,26 @@ public class MyPageFragment extends Fragment {
         music.setAdapter(music_adapter);
         sheet.setAdapter(sheet_adapter);
 
-
-        //현재 날짜 구하기
-        Long now = System.currentTimeMillis();
-        Date date = new Date(now);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String date_string = sdf.format(date);
-        Log.v("debug", date_string);
-
         //add_music_list();
         GetMusicTask getMusic = new GetMusicTask();
+        GetSheetTask getSheet = new GetSheetTask();
+
         try {
             getMusic.start();
             getMusic.join();
+            getSheet.start();
+            getSheet.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-       // add_sheet_list();
-
-
         music.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView name_view, artist_view;
-                String name, artist;
                 Fragment fragment = MusicFragment.newInstance();
                 Bundle bundle = new Bundle();
 
-                name_view = (TextView) view.findViewById(R.id.textView1);
-                artist_view = (TextView) view.findViewById(R.id.textView2);
-                name = name_view.getText().toString();
-                artist = artist_view.getText().toString();
-
-                Log.v("debug", "item selected > " + name + " : " + artist);
-
-                DataVO data = null;
-                try {
-                    JSONObject jObject = jArray.getJSONObject(jArray.length() - 1 - position);
-                    data = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
-                    Log.v("data selected", data.toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                DataVO data = musiclist.get(position);
 
                 Log.v("in Music List", data.toString());
                 bundle.putString("data", data.toString());
@@ -115,20 +99,15 @@ public class MyPageFragment extends Fragment {
         sheet.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView name_view, date_view;
-                String name, date;
                 Fragment fragment = SheetFragment.newInstance();
                 Bundle bundle = new Bundle();
 
-                name_view = (TextView) view.findViewById(R.id.textView1);
-                date_view = (TextView) view.findViewById(R.id.textView2);
-                name = name_view.getText().toString();
-                date = date_view.getText().toString();
+                SheetVO sheetVO = sheetlist.get(position);
 
-                Log.v("debug", "item selected > " + name + " : " + date);
-
-                bundle.putString("name", name);
-                bundle.putString("date", date);
+                bundle.putString("name", sheetVO.getName());
+                bundle.putString("date", sheetVO.getDate());
+                bundle.putString("data", sheetVO.getNote().toString());
+                bundle.putString("chord", sheetVO.getChord().toString());
                 bundle.putInt("flag",1);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
@@ -169,9 +148,6 @@ public class MyPageFragment extends Fragment {
     }
 
 
-
-
-
     private class GetMusicTask extends Thread {
         @Override
         public void run() {
@@ -186,7 +162,6 @@ public class MyPageFragment extends Fragment {
             }
 
             JSONObject jObject = null;
-            DataVO dataVO = null;
 
             try {
                 try {
@@ -203,18 +178,136 @@ public class MyPageFragment extends Fragment {
                     }
                 } catch (Exception e) {
                     jArray = new JSONArray(response);
-                    for (int i = jArray.length() - 1; i > jArray.length() - 4; i--) {
+                    for (int i = 0; i < jArray.length(); i++) {
                         jObject = jArray.getJSONObject(i);
-                        dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                        DataVO dataVO = new DataVO(jObject.getString("artist"), jObject.getString("title"), jObject.getString("date"), jObject.getString("image"), jObject.getString("lyric"));
+                        musiclist.add(dataVO);
                         Log.v("data", dataVO.toString());
-                        music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
-                                dataVO.getTitle(), dataVO.getArtist());
+                    }
+
+                    SortMusic sortMusic = new SortMusic();
+                    Collections.sort(musiclist, sortMusic);
+
+                    if(musiclist.size() > 3) {
+                        for(int i = 0; i < 3; i++) {
+                            DataVO tmp = musiclist.get(i);
+                            music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                    tmp.getTitle(), tmp.getArtist());
+                        }
+                    }
+                    else {
+                        for(int i = 0; i < musiclist.size(); i++) {
+                            DataVO tmp = musiclist.get(i);
+                            music_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                    tmp.getTitle(), tmp.getArtist());
+                        }
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+        }
+
+    }
+
+    private class GetSheetTask extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            GetSheet sheetSearch = new GetSheet();
+            String response = null;
+            try {
+                Log.v("sheet list ", "sheet list");
+                response = sheetSearch.run(MainActivity.serverUrl+"sheet/load", LoginActivity.token, LoginActivity.id);
+                Log.v("sheet response", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            JSONObject jObject = null;
+            DataVO dataVO = null;
+
+            try {
+                try {
+                    jObject = new JSONObject(response);
+                    String returnValue = jObject.getString("status");
+                    Log.v("return Value", returnValue+"");
+
+                    if(returnValue.compareTo("ERROR") == 0) {
+                        sheet.setVisibility(View.GONE);
+                        TextView text = (TextView) view.findViewById(R.id.sheet_text);
+                        Button more = (Button) view.findViewById(R.id.more_sheet);
+                        text.setVisibility(View.VISIBLE);
+                        more.setVisibility(View.INVISIBLE);
+                    }
+                } catch (Exception e) {
+                    jArray = new JSONArray(response);
+
+                    for(int i = 0; i < jArray.length(); i++) {
+                        Log.v("length"+jArray.length(), i+"");
+                        JSONObject object = jArray.getJSONObject(i);
+                        SheetVO sheet = new SheetVO(object.getString("name"), object.getString("date"));
+                        Log.v("data", object.getString("data"));
+                        Log.v("chord", object.getString("chord"));
+                        JSONArray dataArray = new JSONArray(object.getString("data"));
+                        //JSONObject chordArray = new JSONObject(object.getString("chord"));
+                        for(int j = 0; j < dataArray.length(); j++) {
+                            NoteVO tmpNote = new NoteVO(dataArray.getJSONObject(j).getInt("note"), dataArray.getJSONObject(j).getInt("tempo"), dataArray.getJSONObject(j).getInt("octave"), dataArray.getJSONObject(j).getInt("bar"));
+                            sheet.addNote(tmpNote);
+                        }
+                        String tmpString = object.getString("chord");
+                        tmpString = tmpString.replace("[", " ");
+                        tmpString = tmpString.replace("]", " ");
+                        String chordList[] = tmpString.split(",");
+
+                        for(int j = 0; j < chordList.length; j++) {
+                            sheet.addChord(chordList[j].trim());
+                            Log.v("add chord", chordList[j].trim());
+                        }
+
+                        sheetlist.add(sheet);
+                        Log.v("sheet list", sheet.toString());
+                    }
+
+                    SortSheet sortSheet = new SortSheet();
+                    Collections.sort(sheetlist, sortSheet);
+
+                    Log.v("sheet list size", sheetlist.size()+"");
+
+                    if(sheetlist.size() > 3) {
+                        for(int i = 0; i < 3; i++) {
+                            SheetVO tmp = sheetlist.get(i);
+                            sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                    tmp.getName(), tmp.getDate());
+                        }
+                    }
+                    else {
+                        for(int i = 0; i < sheetlist.size(); i++) {
+                            SheetVO tmp = sheetlist.get(i);
+                            sheet_adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
+                                    tmp.getName(), tmp.getDate());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    private class SortMusic implements Comparator<DataVO> {
+        @Override
+        public int compare(DataVO o1, DataVO o2) {
+            return o2.getSearched_date().compareTo(o1.getSearched_date());
+        }
+    }
+
+    private class SortSheet implements Comparator<SheetVO> {
+        @Override
+        public int compare(SheetVO o1, SheetVO o2) {
+            return o2.getName().compareTo(o1.getName());
         }
     }
 }
