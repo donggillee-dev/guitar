@@ -45,6 +45,8 @@ public class ListViewAdapter extends BaseAdapter {
             ImageView iconImageView = (ImageView) convertView.findViewById(R.id.imageView1) ;
             TextView titleTextView = (TextView) convertView.findViewById(R.id.textView1) ;
             TextView descTextView = (TextView) convertView.findViewById(R.id.textView2) ;
+            titleTextView.setSelected(true);
+            descTextView.setSelected(true);
             // 4. Set the text for textView
             ListViewItem listViewItem = listViewItemList.get(position);
 
