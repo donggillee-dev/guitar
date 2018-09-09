@@ -63,8 +63,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private long startTime = 0;
     private long stopTime = 0;
     // Environment.getExternalStorageDirectory()로 각기 다른 핸드폰의 내장메모리의 디렉토리를 알수있다.
-    final private static File RECORDED_FILE = Environment.getExternalStorageDirectory();
-
 
     private ImageView loader;
     private Animation animation;
@@ -98,8 +96,8 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         this.mConfig.context = getActivity();
         this.mConfig.host = "identify-ap-southeast-1.acrcloud.com";
         this.mConfig.dbPath = path; // offline db path, you can change it with other path which this app can access.
-        this.mConfig.accessKey = "3db200c217a70395880f3ecd471bea10";
-        this.mConfig.accessSecret = "CBZ1IaKhQ4pJyrTvI6g0yFWPNrq1MdCaLT9yrgD3";
+        this.mConfig.accessKey = "13ae467799a3353c0483bf7f2d85e597";
+        this.mConfig.accessSecret = "qOZwry4jtadUQZgo0u7kL1pKFccB8WdvE9rlMjf2";
         this.mConfig.protocol = ACRCloudConfig.ACRCloudNetworkProtocol.PROTOCOL_HTTP; // PROTOCOL_HTTPS
         this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_REMOTE;
         //this.mConfig.reqMode = ACRCloudConfig.ACRCloudRecMode.REC_MODE_LOCAL;
