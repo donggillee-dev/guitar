@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Guitar</string>
+    <string name="app_name">Music Maker</string>
     <string name="title_home">Home</string>
     <string name="title_record">Listen</string>
     <string name="title_sheet">Music Sheet</string>
