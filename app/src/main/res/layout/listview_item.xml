@@ -27,6 +27,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:gravity="center_vertical"
+            android:singleLine="true"
+            android:ellipsize="marquee"
             android:text="New Text"
             android:textSize="24dp" />
 
@@ -34,6 +36,8 @@
             android:id="@+id/textView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:ellipsize="marquee"
             android:layout_weight="1"
             android:text="New Text"
             android:textSize="16dp" />

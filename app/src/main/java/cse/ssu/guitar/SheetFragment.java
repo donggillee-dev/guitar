@@ -145,6 +145,7 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
             }
 
             insertNode(sheet, size);
+            insertChord(sheet, size);
 
             ResendSheetTask task = new ResendSheetTask();
             task.start();
@@ -185,12 +186,77 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
             }
 
             insertNode(sheet, size);
+            insertChord(sheet, size);
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
+    private void insertChord(SheetVO sheet, int size) {
+        int node_count = 0;
+        int leftMargin = 0;
+        int lineMargin = 0;
+        int lineCount = 0;
+        int i = 0;
+        int count = 0;
+        ArrayList <NoteVO> list = sheet.getNote();
+        ArrayList <String> chordArray = sheet.getChord();
+        ArrayList <Integer> bar = new ArrayList<>();
+        ArrayList <Integer> mid = new ArrayList<>();
+
+        rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
+
+        count = 0;
+        for(i = 0; i < list.size(); i++) {
+            NoteVO tmp = list.get(i);
+            count++;
+            if(tmp.getBar() == 1) {
+                bar.add(count);
+                count = 0;
+            }
+        }
+        for(i = 0; i < bar.size(); i++) {
+            mid.add(bar.get(i) / 2 + 1);
+        }
+
+
+
+
+        Log.v("bar", bar.toString());
+        Log.v("mid", mid.toString());
+
+        for(i = 0; i < chordArray.size(); i++) {
+            lineCount = i / 4;
+            if(i % 4 == 0)
+                leftMargin = 0;
+            else if(i % 2 == 0)
+                leftMargin = bar.get(i / 4) + 1;
+            else if(i % 4 == 1)
+                leftMargin = mid.get(i / 4);
+            else
+                leftMargin = bar.get(i / 4) + 1 + mid.get(i / 4);
+
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(80, 80);
+
+            TextView textView = new TextView(getActivity());
+            textView.setText(chordArray.get(i));
+            lp.alignWithParent = true;
+            lp.leftMargin = leftMargin * 70 + 90;
+            lp.topMargin = lineCount * 210;
+            Log.v("left margin", lp.leftMargin+"");
+            Log.v("top Margin",lp.topMargin+"" );
+            textView.setLayoutParams(lp);
+            rl.addView(textView);
+        }
+
+
+
+
+
+
+
+    }
     private void insertNode(SheetVO sheet, int size) {
         int[] marginList = {90, 80, 70, 60, 50, 40, 30};
         int i;
@@ -204,7 +270,6 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
         int endMargin = 0;
 
         ArrayList <NoteVO> list = sheet.getNote();
-        ArrayList <String> chordArray = sheet.getChord();
 
         rl = (RelativeLayout) view.findViewById(R.id.noteLayout);
 

@@ -53,9 +53,14 @@ public class MusicFragment extends Fragment implements MainActivity.onKeyBackPre
         view = inflater.inflate(R.layout.fragment_music, container, false);
         TextView name_text = (TextView) view.findViewById(R.id.name);
         TextView artist_text = (TextView) view.findViewById(R.id.artist);
+        name_text.setSelected(true);
+        artist_text.setSelected(true);
 
         TextView name_text1 = (TextView) view.findViewById(R.id.name1);
         TextView artist_text1 = (TextView) view.findViewById(R.id.artist1);
+
+        name_text1.setSelected(true);
+        artist_text1.setSelected(true);
 
 
         Button music_button, lyrics_button;

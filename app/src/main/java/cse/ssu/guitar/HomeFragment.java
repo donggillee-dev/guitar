@@ -168,8 +168,8 @@ public class HomeFragment extends Fragment {
                     SortMusic sortMusic = new SortMusic();
                     Collections.sort(musiclist, sortMusic);
 
-                    if(musiclist.size() > 3) {
-                        for(int i = 0; i < 3; i++) {
+                    if(musiclist.size() > 4) {
+                        for(int i = 0; i < 4; i++) {
                             DataVO tmp = musiclist.get(i);
                             adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.music),
                                     tmp.getTitle(), tmp.getArtist());
