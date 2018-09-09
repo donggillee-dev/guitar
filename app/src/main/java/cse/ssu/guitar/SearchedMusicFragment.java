@@ -2,7 +2,6 @@ package cse.ssu.guitar;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -20,15 +18,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 import Network.GetMusicSearch;
 import VO.DataVO;
@@ -54,7 +47,6 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_searched_music, container, false);
         trackNum = view.findViewById(R.id.number);
         adapter = new ListViewAdapter();
@@ -63,8 +55,6 @@ public class SearchedMusicFragment extends Fragment implements MainActivity.onKe
         list.setAdapter(adapter);
 
         flag = getArguments().getInt("flag");
-        //createList();
-
 
         try {
             GetDataTask task = new GetDataTask();

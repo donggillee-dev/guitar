@@ -68,8 +68,6 @@ public class MusicFragment extends Fragment implements MainActivity.onKeyBackPre
         String tmp = getArguments().getString("data");
         flag = getArguments().getInt("flag");
 
-        Log.v("data", tmp + "");
-        Log.v("flag", String.valueOf(flag));
         try {
             JSONObject object = new JSONObject(tmp);
             dataVO = new DataVO(object.getString("artist"), object.getString("title"),
@@ -122,7 +120,6 @@ public class MusicFragment extends Fragment implements MainActivity.onKeyBackPre
             }
         });
 
-
         return view;
     }
 
@@ -174,7 +171,6 @@ public class MusicFragment extends Fragment implements MainActivity.onKeyBackPre
             {
                 e.printStackTrace();
             }
-
             return null;
         }
 
@@ -190,7 +186,6 @@ public class MusicFragment extends Fragment implements MainActivity.onKeyBackPre
                 } else {
                     layout.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.color));
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }

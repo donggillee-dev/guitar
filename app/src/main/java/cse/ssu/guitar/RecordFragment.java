@@ -1,19 +1,14 @@
 package cse.ssu.guitar;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,7 +39,6 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import Network.PostLogin;
 import Network.PostMusicSearch;
 import VO.AlbumVO;
 import VO.ArtistVO;
@@ -56,9 +50,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     public static RecordFragment newInstance() {
         return new RecordFragment();
     }
-
-    private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
-    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE = 1;
     ToggleButton listenBtn;
 
     private ACRCloudClient mClient;
@@ -68,7 +59,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
     private boolean initState = false;
 
     private String path = "";
-    private boolean recordCheck = true;
 
     private long startTime = 0;
     private long stopTime = 0;
@@ -126,43 +116,21 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         loader = (ImageView)view.findViewById(R.id.loader);
         listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
 
-        int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO);
 
-        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-            // 권한 없음
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
-        }
-        permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-            // 권한 없음
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE);
-        }
+
         listenBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (listenBtn.isChecked() == true) {
-
-
-                    // 실험 결과 왠만하면 아래 recorder 객체의 속성을 지정하는 순서는 이대로 하는게 좋다 위치를 바꿨을때 에러가 났었음
-                    // 녹음 시작을 위해  MediaRecorder 객체  recorder를 생성한다.
                     animation = AnimationUtils.loadAnimation(getActivity(),R.anim.rotate);
                     loader.startAnimation(animation);
                     start();
                 } else {
-                    //loader.setVisibility(View.INVISIBLE);
-
                     loader.clearAnimation();
                     animation.setAnimationListener(null);
-
                     stop();
                     Toast.makeText(getActivity(),"녹음이 중지되었습니다.", Toast.LENGTH_LONG).show();
-
-                    Log.v("debug", "before stop");
                 }
             }
         });
@@ -307,26 +275,17 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
             JSONObject object = null;
             object = new JSONObject(data);
             musicVO.setExternal_ids(object.getString("play_offset_ms"));
-            //musicVO.setExternal_metadata(object.getString("external_metadata"));
             musicVO.setArtist(new ArtistVO(object.getString("artists")));
-            //장르 정보가 넘어올때가 있고 안넘어올때가 있어서 일단은 주석
-            //musicVO.setGenres(new GenreVO(object.getString("genres")));
             musicVO.setTitle(object.getString("title"));
             musicVO.setRelease_date(object.getString("release_date"));
-            //musicVO.setLabel(object.getString("label"));
             musicVO.setDuration_ms(Integer.parseInt(object.getString("duration_ms")));
             musicVO.setAlbum(new AlbumVO(object.getString("album")));
-            //musicVO.setAcrid(object.getString("acrid"));
-            //musicVO.setResult_from(Integer.parseInt(object.getString("result_from")));
             musicVO.setScore(Integer.parseInt(object.getString("score")));
-
-            Log.v("final debug", musicVO.toString());
 
             title = musicVO.getTitle();
             artist = musicVO.getArtist().getName();
 
             sendData(musicVO);
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -437,24 +396,17 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                         else {
                             lyric = null;
                         }
-
                     }
                     else {
                         lyric = null;
                         image = null;
                     }
-
-
-                } catch (
-                        IOException e)
-
+                } catch (IOException e)
                 {
                     e.printStackTrace();
                 }
             }
         };
-
-
 
         try {
             thread.start();
@@ -470,46 +422,14 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         Log.v("date", date+"");
 
         dataVO = new DataVO(artist, title, date, image, lyric);
-        //write(dataVO);
-
-
         WriteTask task = new WriteTask();
         task.execute();
     }
-
-    //여기서 원래 http 통신을 해야함
-    private void write(DataVO dataVO) {
-        String filepath = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/log";
-
-        File file = new File(filepath);
-        if(!file.exists()){
-            file.mkdirs();
-        }
-
-        SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmmss");
-        SimpleDateFormat format_2 = new SimpleDateFormat("yyyy-MM-dd");
-        Date currentTime = new Date();
-        String title = format.format(currentTime);
-        String date = format_2.format(currentTime);
-
-
-        File savefile = new File(filepath+"/"+title+" "+dataVO.getTitle()+" "+dataVO.getArtist()+".txt");
-        try{
-            FileOutputStream fos = new FileOutputStream(savefile);
-            fos.write(dataVO.toString().getBytes());
-            fos.close();
-        } catch(IOException e){
-            e.printStackTrace();
-        }
-
-    }
-
 
     private class WriteTask extends AsyncTask<Void, Void, String> {
         @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         protected String doInBackground(Void... voids) {
-
             PostMusicSearch musicSearch = new PostMusicSearch();
             String response = null;
             try {
@@ -524,7 +444,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
         protected void onPostExecute(String response) {
             super.onPostExecute(response);
             JSONObject jObject = null;
-
             try {
                 //회원가입 성공
                 jObject = new JSONObject(response);
@@ -535,7 +454,6 @@ public class RecordFragment extends Fragment implements IACRCloudListener {
                     Toast.makeText(getActivity(), "데이터 전송 실패", Toast.LENGTH_SHORT).show();
                     this.cancel(true);
                 }
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }

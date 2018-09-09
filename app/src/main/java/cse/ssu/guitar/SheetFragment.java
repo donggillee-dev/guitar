@@ -161,9 +161,6 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
     private void createStoredSheet(String name, String date, String note, String chord) {
         int size = 0;
         int i;
-        JSONObject object = null;
-        ArrayList<NoteVO> list = new ArrayList<>();
-        ArrayList<String> chordArray = new ArrayList<>();
         sheet = new SheetVO(name, date);
 
         try {
@@ -192,7 +189,6 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 
     private void insertNode(SheetVO sheet, int size) {
@@ -206,7 +202,7 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
         int nodeCount = 0;
         int startMargin = 0;
         int endMargin = 0;
-        int chord = 0;
+
         ArrayList <NoteVO> list = sheet.getNote();
         ArrayList <String> chordArray = sheet.getChord();
 
@@ -337,28 +333,6 @@ public class SheetFragment extends Fragment implements MainActivity.onKeyBackPre
                 lineMargin += 210;
                 leftMargin = 0;
             }
-
-//            RelativeLayout.LayoutParams lpStart = new RelativeLayout.LayoutParams(80, 80);
-//            TextView textView = new TextView(getActivity());
-//            textView.setText(chordArray.get(chord++));
-//            textView.setTextSize(20);
-//            lpStart.alignWithParent = true;
-//
-//            lpStart.leftMargin = startMargin;
-//            lpStart.topMargin = lineMargin - 20;
-//            textView.setLayoutParams(lpStart);
-//            rl.addView(textView);
-//
-//            RelativeLayout.LayoutParams lpEnd = new RelativeLayout.LayoutParams(80, 80);
-//            textView = new TextView(getActivity());
-//            textView.setText(chordArray.get(chord++));
-//            textView.setTextSize(20);
-//            lpEnd.alignWithParent = true;
-//
-//            lpEnd.leftMargin = startMargin;
-//            lpEnd.topMargin = lineMargin - 20;
-//            textView.setLayoutParams(lpEnd);
-//            rl.addView(textView);
         }
     }
 

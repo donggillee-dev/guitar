@@ -2,12 +2,7 @@ package cse.ssu.guitar;
 
 
 import android.app.Activity;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -17,28 +12,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 import Network.GetSheet;
-import Network.PostLogin;
-import VO.DataVO;
 import VO.NoteVO;
 import VO.SheetVO;
 
@@ -55,11 +42,9 @@ public class SheetListFragment extends Fragment implements MainActivity.onKeyBac
     private ArrayList <SheetVO> sheetList;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_sheet_list, container, false);
-
         sheetList = new ArrayList<>();
         adapter = new ListViewAdapter();
 

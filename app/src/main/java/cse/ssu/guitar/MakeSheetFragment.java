@@ -1,16 +1,15 @@
 package cse.ssu.guitar;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.app.ProgressDialog;
 import android.media.MediaRecorder;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,12 +19,10 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 import Network.PostAudioFile;
 
 public class MakeSheetFragment extends Fragment {
@@ -46,31 +43,23 @@ public class MakeSheetFragment extends Fragment {
     private Animation animation;
     private boolean check;
     private String response;
+    private ProgressDialog mProgressDialog;
+
+
 
     public static MakeSheetFragment newInstance() {
         return new MakeSheetFragment();
     }
+
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_make_sheet, container, false);
         loader = (ImageView)view.findViewById(R.id.loader);
         listenBtn = (ToggleButton) view.findViewById(R.id.listenBtn);
 
-        int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO);
-        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-            // 권한 없음
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
-        }
 
-        int permissionCheck2 = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permissionCheck2 == PackageManager.PERMISSION_DENIED) {
-            // 권한 없음
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_WRITE_EXETERNAL_STORAGE);
-        }
+
+
         listenBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -84,27 +73,16 @@ public class MakeSheetFragment extends Fragment {
                 } else {
                     loader.clearAnimation();
                     animation.setAnimationListener(null);
-
                     stopRecording stopRecording = new stopRecording();
-                    stopRecording.start();
-
-                    try {
-                        stopRecording.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    Log.v("before bundle", "***");
-                    if(check == true) {
-                        Log.v("response in make sheet", response);
-                        Bundle bundle = new Bundle();
-                        Fragment fragment = SheetFragment.newInstance();
-                        bundle.putString("response", response);
-                        bundle.putString("name", time);
-                        bundle.putString("date", date);
-                        bundle.putInt("flag",2);
-                        fragment.setArguments(bundle);
-                        replaceFragment(fragment);
-                    }
+                    stopRecording.execute();
+//                    stopRecording.start();
+//                    try {
+//                        stopRecording.join();
+//                        Log.v("***","finish join");
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+                    Log.v("***","finish dismiss");
                 }
             }
         });
@@ -118,10 +96,61 @@ public class MakeSheetFragment extends Fragment {
         fragmentTransaction.replace(R.id.content, fragment).commit();
     }
 
+    private class stopRecording extends AsyncTask<Void, Void, Void> {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+
+        protected void onPreExecute(){
+            mProgressDialog = ProgressDialog.show(
+                    getActivity(), "분석 중입니다",
+                    "잠시만 기다려주세요..");
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (recorder == null)
+                return null;
+
+            recorder.stop();
+            recorder.reset();
+            recorder.release();
+            recorder = null;
+            SendAudioFile task = new SendAudioFile();
+            task.start();
+
+            try {
+                task.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+
+        protected void onPostExecute(Void nv) {
+            super.onPostExecute(nv);
+            mProgressDialog.dismiss();
+            Log.v("before bundle", "***");
+            if(check == true) {
+                Log.v("response in make sheet", response);
+                Bundle bundle = new Bundle();
+                Fragment fragment = SheetFragment.newInstance();
+                bundle.putString("response", response);
+                bundle.putString("name", time);
+                bundle.putString("date", date);
+                bundle.putInt("flag",2);
+                fragment.setArguments(bundle);
+                replaceFragment(fragment);
+            }
+        }
+    }
+
     private class SendAudioFile extends Thread {
         @Override
         public void run() {
             super.run();
+
             Log.v("in send audiofile", "***");
             PostAudioFile tm = new PostAudioFile();
             response = null;
@@ -169,7 +198,6 @@ public class MakeSheetFragment extends Fragment {
             Date currentTime = new Date();
             time = format.format(currentTime);
             date = format_2.format(currentTime);
-            Log.v("time", time);
             filename = RECORDED_FILE.getAbsolutePath() + "/SSUGuitar/" + time + ".mp3";
 
             // 저장될 파일 지정
@@ -183,7 +211,7 @@ public class MakeSheetFragment extends Fragment {
             }
         }
     }
-
+/*
     private class stopRecording extends Thread {
         @Override
         public void run() {
@@ -198,7 +226,26 @@ public class MakeSheetFragment extends Fragment {
             recorder = null;
 
             try {
+                han = new Handler(){
+                    public void handleMessage(Message msg) {
+                        Log.v("aaa","???");
+                        mProgressDialog.dismiss();
+                        boolean retry = true;
+                        while (retry) {
+
+                            Log.v("aaa","count++");
+
+                            retry = false;
+
+                        }
+
+
+                        Toast.makeText(getActivity(),
+                                "종료되었습니다.", Toast.LENGTH_LONG).show();
+                    }
+                };
                 SendAudioFile task = new SendAudioFile();
+                //task.execute();
                 task.start();
                 task.join();
             } catch (Exception e) {
@@ -206,4 +253,5 @@ public class MakeSheetFragment extends Fragment {
             }
         }
     }
+    */
 }

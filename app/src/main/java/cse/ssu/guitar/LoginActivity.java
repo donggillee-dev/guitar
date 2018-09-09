@@ -1,17 +1,17 @@
 package cse.ssu.guitar;
 
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -25,10 +25,11 @@ import Network.PostLogin;
 public class LoginActivity extends AppCompatActivity {
     private Button signUpButton;
     private Button loginButton;
+    private RelativeLayout rl;
+    private InputMethodManager imm;
     public static String id;
     public static String token;
     private String password;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,17 +44,15 @@ public class LoginActivity extends AppCompatActivity {
 
         loginButton = (Button) findViewById(R.id.loginButton);
         signUpButton = (Button) findViewById(R.id.signUpButton);
+        imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        rl = (RelativeLayout)findViewById(R.id.loginLayout);
 
         final EditText idEditText = (EditText) findViewById(R.id.idEditText);
         final EditText pwEditText = (EditText) findViewById(R.id.pwEditText);
-        //final EditText myNumberEditText = (EditText) findViewById(R.id.myNumberEditText);
-        //final EditText partnerNumberEditText = (EditText) findViewById(R.id.partnerNumberEditText);
 
         //로그인 버튼 이벤트 리스너
         loginButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-
-                // EditText로부터 입력값을 받아오는 부분
                 id = idEditText.getText().toString();
                 password = pwEditText.getText().toString();
 
@@ -66,9 +65,15 @@ public class LoginActivity extends AppCompatActivity {
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 Intent intent = new Intent(LoginActivity.this, SignInActivity.class);
                 startActivity(intent);
+            }
+        });
+        rl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                imm.hideSoftInputFromWindow(idEditText.getWindowToken(), 0);
+                imm.hideSoftInputFromWindow(pwEditText.getWindowToken(), 0);
             }
         });
     }
@@ -111,7 +116,6 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "로그인 실패", Toast.LENGTH_SHORT).show();
                         this.cancel(true);
                     }
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

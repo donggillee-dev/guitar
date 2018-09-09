@@ -19,7 +19,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -35,9 +34,7 @@ import VO.DataVO;
  */
 
 public class HomeFragment extends Fragment {
-    public static HomeFragment newInstance() {
-        return new HomeFragment();
-    }
+
 
     private ListView listview;
     private ListViewAdapter adapter;
@@ -45,14 +42,15 @@ public class HomeFragment extends Fragment {
     private JSONArray jArray;
     private ArrayList<DataVO> musiclist;
 
+    public static HomeFragment newInstance() {
+        return new HomeFragment();
+    }
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
-
         view = inflater.inflate(R.layout.home_fragment, container, false);
         musiclist = new ArrayList<>();
 
         Activity activity = (MainActivity)getActivity();
         final BottomNavigationView menu = (BottomNavigationView)activity.findViewById(R.id.navigation);
-
 
         ImageButton start = (ImageButton) view.findViewById(R.id.start_record);
         start.setOnClickListener(new ImageButton.OnClickListener() {
@@ -60,7 +58,6 @@ public class HomeFragment extends Fragment {
             @SuppressLint("RestrictedApi")
             @Override
             public void onClick(View view) {
-                //Log.v("debug","clickBnt");
                 Fragment fragment = RecordFragment.newInstance();
                 Bundle bundle = new Bundle();
                 bundle.putInt("flag",1);
@@ -76,13 +73,11 @@ public class HomeFragment extends Fragment {
             @SuppressLint("RestrictedApi")
             @Override
             public void onClick(View view) {
-                //Log.v("debug","clickBnt");
                 replaceFragment(MakeSheetFragment.newInstance());
                 //누르는 경우 하단 메뉴도 함께 변경
                 menu.setSelectedItemId(R.id.navigation_sheet);
             }
         });
-        // 리스트뷰 참조 및 Adapter달기
 
         // Adapter 생성
         adapter = new ListViewAdapter();
@@ -98,22 +93,18 @@ public class HomeFragment extends Fragment {
             e.printStackTrace();
         }
 
-
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Fragment fragment = MusicFragment.newInstance();
                 Bundle bundle = new Bundle();
-
                 DataVO data = musiclist.get(position);
-
                 bundle.putString("data", data.toString());
                 bundle.putInt("flag",1);
                 fragment.setArguments(bundle);
                 replaceFragment(fragment);
             }
         });
-
 
         //더보기 버튼 지정
         Button button = (Button)view.findViewById(R.id.more);
@@ -129,7 +120,6 @@ public class HomeFragment extends Fragment {
                 fragment.setArguments(bundle);
             }
         });
-
 
         return view; // 여기서 UI를 생성해서 View를 return
     }
@@ -147,12 +137,10 @@ public class HomeFragment extends Fragment {
             GetMusicSearch musicSearch = new GetMusicSearch();
             String response = null;
             try {
-                Log.v("musiclist", "music list");
                 response = musicSearch.run(MainActivity.serverUrl + "musiclist", LoginActivity.token, LoginActivity.id);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             JSONObject jObject = null;
 
             try {
